@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm uninstall:*)",
+      "Bash(rm -f .env)",
+      "Bash(:)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

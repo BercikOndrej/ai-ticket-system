@@ -1,0 +1,15 @@
+services:
+  server:
+    build: ./server
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      CLIENT_URL: http://localhost
+
+  client:
+    build: ./client
+    ports:
+      - "80:80"
+    depends_on:
+      - server
