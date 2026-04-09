@@ -3,18 +3,27 @@ import { auth } from "../src/auth";
 import { prisma } from "../src/db";
 import { UserRole } from "../src/enums";
 
-const email = process.env.SEED_ADMIN_EMAIL!;
-const password = process.env.SEED_ADMIN_PASSWORD!;
+const adminEmail = process.env.SEED_ADMIN_EMAIL!;
+const adminPassword = process.env.SEED_ADMIN_PASSWORD!;
+const agentEmail = process.env.SEED_AGENT_EMAIL!;
+const agentPassword = process.env.SEED_AGENT_PASSWORD!;
 
-if (!email || !password) {
-  console.error("SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD must be set");
+if (!adminEmail || !adminPassword || !agentEmail || !agentPassword) {
+  console.error(
+    "SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD, SEED_AGENT_EMAIL, and SEED_AGENT_PASSWORD must be set"
+  );
   process.exit(1);
 }
 
-async function seed() {
+async function seedUser(
+  name: string,
+  email: string,
+  password: string,
+  role: UserRole
+) {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    console.log(`Admin user ${email} already exists — skipping`);
+    console.log(`${role} user ${email} already exists — skipping`);
     return;
   }
 
@@ -23,14 +32,7 @@ async function seed() {
   const now = new Date();
 
   const user = await prisma.user.create({
-    data: {
-      name: "Admin",
-      email,
-      emailVerified: false,
-      role: UserRole.Admin,
-      createdAt: now,
-      updatedAt: now,
-    },
+    data: { name, email, emailVerified: false, role, createdAt: now, updatedAt: now },
   });
 
   await prisma.account.create({
@@ -44,7 +46,12 @@ async function seed() {
     },
   });
 
-  console.log(`Admin user created: ${email}`);
+  console.log(`${role} user created: ${email}`);
+}
+
+async function seed() {
+  await seedUser("Admin", adminEmail, adminPassword, UserRole.Admin);
+  await seedUser("Agent", agentEmail, agentPassword, UserRole.Agent);
 }
 
 seed()
