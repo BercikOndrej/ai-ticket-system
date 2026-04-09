@@ -1,16 +1,28 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./auth";
 import { requireAuth } from "./middleware/auth";
+import { validateEnv } from "./config";
+
+validateEnv();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
-// BetterAuth handler must come before express.json()
+const signInLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter and BetterAuth handler must come before express.json()
+app.use("/api/auth/sign-in", signInLimiter);
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use(express.json());

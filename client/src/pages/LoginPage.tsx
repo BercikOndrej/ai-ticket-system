@@ -56,7 +56,7 @@ export default function LoginPage() {
     });
 
     if (signInError) {
-      setServerError(signInError.message || "Invalid email or password");
+      setServerError("Invalid email or password");
       return;
     }
 

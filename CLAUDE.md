@@ -55,7 +55,6 @@ Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch cu
 - **Protecting routes (server):** use the `requireAuth` middleware from `server/src/middleware/auth.ts`; it validates the session and attaches it to `req.authSession` (`{ user, session }`)
 - **Client setup:** `client/src/lib/auth-client.ts` exports `authClient`, `signIn`, `signOut`, and `useSession` (via `createAuthClient` pointing to `http://localhost:3001`);
 - **Protecting routes (client):** `ProtectedRoute` — redirects unauthenticated users to `/login`; `AdminRoute` — redirects non-admin users to `/`; nest routes inside both guards in `App.tsx` for admin-only pages
-- **Seeding users:** `server/prisma/seed.ts` seeds one Admin and one Agent user from env vars (`SEED_ADMIN_EMAIL/PASSWORD`, `SEED_AGENT_EMAIL/PASSWORD`); run with `npx ts-node prisma/seed.ts` from `server/`
 
 ## Key Domain Concepts
 

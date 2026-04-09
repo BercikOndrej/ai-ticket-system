@@ -8,6 +8,9 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   trustedOrigins: [process.env.CLIENT_URL!],
+  advanced: {
+    useSecureCookies: process.env.NODE_ENV === "production",
+  },
   emailAndPassword: {
     enabled: true,
     disableSignUp: true,
