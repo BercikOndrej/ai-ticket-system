@@ -106,6 +106,22 @@ body {
   margin-bottom: 1rem;
 }
 
+.login-card input.input-error {
+  border-color: #dc2626;
+  margin-bottom: 0.25rem;
+}
+
+.login-card input.input-error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.field-error {
+  color: #dc2626;
+  font-size: 0.8rem;
+  margin: 0 0 0.75rem;
+}
+
 /* Navbar */
 .navbar {
   display: flex;
