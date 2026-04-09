@@ -8,7 +8,7 @@ import { requireAuth } from "./middleware/auth";
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
 // BetterAuth handler must come before express.json()
 app.all("/api/auth/*splat", toNodeHandler(auth));

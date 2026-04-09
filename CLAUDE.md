@@ -51,3 +51,7 @@ Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch cu
 - **Ticket statuses:** `Open`, `Resolved`, `Closed`
 - **Ticket classifications:** `General question`, `Technical question`, `Request`, `Refund`
 - **Email ingestion:** Inbound via SendGrid/Mailgun webhooks, outbound replies via their APIs
+
+## Environments Variables
+
+- Always when you add new variables into `.env` file verify that all variables are included in `.env.example` too
