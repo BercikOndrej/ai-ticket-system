@@ -23,7 +23,8 @@
       "Bash(npx shadcn@latest:*)",
       "Bash(npx ts-node:*)",
       "Bash(git rm:*)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(npx playwright:*)"
     ]
   }
 }

@@ -14,15 +14,16 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
-const signInLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
 // Rate limiter and BetterAuth handler must come before express.json()
-app.use("/api/auth/sign-in", signInLimiter);
+if (process.env.NODE_ENV === "production") {
+  const signInLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+  app.use("/api/auth/sign-in", signInLimiter);
+}
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use(express.json());
