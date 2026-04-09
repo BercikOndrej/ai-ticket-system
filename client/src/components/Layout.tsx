@@ -5,7 +5,7 @@ export default function Layout() {
   return (
     <div>
       <Navbar />
-      <main className="main-content">
+      <main className="py-8 px-6">
         <Outlet />
       </main>
     </div>
