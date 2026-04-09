@@ -10,7 +10,7 @@ AI-powered ticket management system for an online course business. Customers sen
 
 Monorepo with two packages:
 
-- **`client/`** — React 19 + Vite 8 + TypeScript frontend (React Router for navigation)
+- **`client/`** — React 19 + Vite 8 + TypeScript frontend (React Router for navigation, shadcn/ui components, Tailwind CSS v4)
 - **`server/`** — Express 5 + TypeScript backend, Prisma 7 ORM + PostgreSQL (planned: session-based auth, Claude API integration)
 
 The server exposes a REST API under `/api/` (currently just `/api/health`). The client dev server runs on port 5173 and the server on port 3001.
@@ -51,6 +51,12 @@ Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch cu
 - **Ticket statuses:** `Open`, `Resolved`, `Closed`
 - **Ticket classifications:** `General question`, `Technical question`, `Request`, `Refund`
 - **Email ingestion:** Inbound via SendGrid/Mailgun webhooks, outbound replies via their APIs
+
+## UI / Styling
+
+- **shadcn/ui** is installed in `client/` with the neutral (black & white) theme and Tailwind CSS v4
+- All UI components live in `client/src/components/ui/` — add new ones via `npx shadcn@latest add <component>`
+- Use shadcn components (`Button`, `Card`, `Input`, `Label`, `Separator`, etc.) for all new UI — do not write raw HTML buttons or hand-rolled form inputs
 
 ## Environments Variables
 

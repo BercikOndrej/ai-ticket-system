@@ -18,7 +18,9 @@
       "Bash(npx ts-node-dev:*)",
       "Bash(curl:*)",
       "Bash(node -e ':*)",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('role:', d['user']['role']\\)\")"
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('role:', d['user']['role']\\)\")",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest:*)"
     ]
   }
 }
