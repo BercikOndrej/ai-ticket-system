@@ -46,6 +46,16 @@ npx prisma studio          # Open database GUI
 
 Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch current documentation before writing or modifying code that uses any library, framework, or API. Do not rely on training data alone — docs may have changed.
 
+## Authentication
+
+- **Library:** [BetterAuth](https://better-auth.com) — session-based auth
+- **Server config:** `server/src/auth.ts` — uses `prismaAdapter` with PostgreSQL; email/password enabled, **sign-up is disabled** (users are seeded manually)
+- **User roles:** `Admin` and `Agent` (defined in `server/src/enums.ts`); stored as an additional field on the user model, defaulting to `Agent`
+- **Auth routes:** mounted at `/api/auth/*` via `toNodeHandler(auth)` in `server/src/index.ts` — this handler must be registered **before** `express.json()`
+- **Protecting routes (server):** use the `requireAuth` middleware from `server/src/middleware/auth.ts`; it validates the session and attaches it to `req.authSession` (`{ user, session }`)
+- **Client setup:** `client/src/lib/auth-client.ts` exports `authClient`, `signIn`, `signOut`, and `useSession` (via `createAuthClient` pointing to `http://localhost:3001`)
+- **CORS:** configured with `credentials: true` and `origin: process.env.CLIENT_URL`
+
 ## Key Domain Concepts
 
 - **Ticket statuses:** `Open`, `Resolved`, `Closed`
