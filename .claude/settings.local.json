@@ -27,7 +27,8 @@
       "Bash(npx playwright:*)",
       "Bash(echo \"exit: $?\")",
       "Bash(mkdir -p \"C:/Users/bercik/Desktop/Work/AI/ticket-system/e2e/.auth\")",
-      "Bash(mkdir -p \"C:/Users/bercik/Desktop/Work/AI/ticket-system/e2e/setup\")"
+      "Bash(mkdir -p \"C:/Users/bercik/Desktop/Work/AI/ticket-system/e2e/setup\")",
+      "Bash(echo \"EXIT:$?\")"
     ]
   }
 }

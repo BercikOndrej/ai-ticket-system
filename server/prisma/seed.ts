@@ -1,21 +1,19 @@
-import "dotenv/config";
 import { auth } from "../src/auth";
 import { prisma } from "../src/db";
 import { UserRole } from "../src/enums";
 
-const adminEmail = process.env.SEED_ADMIN_EMAIL!;
-const adminPassword = process.env.SEED_ADMIN_PASSWORD!;
-const agentEmail = process.env.SEED_AGENT_EMAIL!;
-const agentPassword = process.env.SEED_AGENT_PASSWORD!;
+const required = (name: string): string => {
+  const value = process.env[name];
+  if (!value) throw new Error(`Missing required env var: ${name}`);
+  return value;
+};
 
-if (!adminEmail || !adminPassword || !agentEmail || !agentPassword) {
-  console.error(
-    "SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD, SEED_AGENT_EMAIL, and SEED_AGENT_PASSWORD must be set"
-  );
-  process.exit(1);
-}
+const adminEmail = required("SEED_ADMIN_EMAIL");
+const adminPassword = required("SEED_ADMIN_PASSWORD");
+const agentEmail = required("SEED_AGENT_EMAIL");
+const agentPassword = required("SEED_AGENT_PASSWORD");
 
-async function seedUser(
+async function upsertUser(
   name: string,
   email: string,
   password: string,
@@ -23,7 +21,7 @@ async function seedUser(
 ) {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    console.log(`${role} user ${email} already exists — skipping`);
+    console.log(`${role} ${email} already exists — skipping`);
     return;
   }
 
@@ -46,17 +44,17 @@ async function seedUser(
     },
   });
 
-  console.log(`${role} user created: ${email}`);
+  console.log(`Created ${role}: ${email}`);
 }
 
 async function seed() {
-  await seedUser("Admin", adminEmail, adminPassword, UserRole.Admin);
-  await seedUser("Agent", agentEmail, agentPassword, UserRole.Agent);
+  await upsertUser("Admin", adminEmail, adminPassword, UserRole.Admin);
+  await upsertUser("Agent", agentEmail, agentPassword, UserRole.Agent);
 }
 
 seed()
   .catch((err) => {
-    console.error(err);
+    console.error("Seed failed:", err);
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());
