@@ -34,6 +34,15 @@ npm run build     # Compile TypeScript to dist/
 npm start         # Run compiled JS from dist/
 ```
 
+### Formatting (run in `client/` or `server/`)
+
+```bash
+npm run format        # Format all files in-place
+npm run format:check  # Check formatting without writing (CI)
+```
+
+Prettier config is in `.prettierrc` at the monorepo root — both packages share it. Settings: double quotes, semicolons, trailing commas, 100-char print width.
+
 ### Database (`server/` directory)
 
 ```bash
