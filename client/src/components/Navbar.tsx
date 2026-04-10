@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import Logo from "./Logo";
 import { signOut, useSession } from "../lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -17,7 +18,10 @@ export default function Navbar() {
     <>
       <nav className="flex justify-between items-center px-6 h-14 bg-background">
         <div className="flex items-center gap-6">
-          <span className="text-base font-semibold">Ticket System</span>
+          <Link to="/" className="flex items-center gap-2 transition-transform duration-200 hover:scale-105">
+            <Logo />
+            <span className="text-base font-semibold">SimpleTickets</span>
+          </Link>
           {session?.user?.role === UserRole.Admin && (
             <Link
               to="/users"
