@@ -62,6 +62,26 @@ Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch cu
 - **Ticket classifications:** `General question`, `Technical question`, `Request`, `Refund`
 - **Email ingestion:** Inbound via SendGrid/Mailgun webhooks, outbound replies via their APIs
 
+## Shared Code (core/)
+
+- Validation schemas and other logic shared between client and server live in `core/src/` at the monorepo root
+- Import them as `import { ... } from "core/schemas/<resource>"` in both client and server
+- The alias is configured in `client/vite.config.ts` (Vite alias + `dedupe: ['zod']`) and both `tsconfig` files (`paths`); the server dev script registers `tsconfig-paths/register` so the alias works at runtime
+- Never duplicate a Zod schema — if the same shape is validated on both sides, define it once in `core/` and import it in both
+
+## Server Route Organization
+
+- Every resource gets its own router module at `server/src/routes/<resource>.ts` (e.g. `users.ts`, `tickets.ts`)
+- Each module creates an `express.Router()`, defines all routes for that resource on it, and exports it as default
+- Mount routers in `server/src/index.ts` with `app.use("/api/<resource>", router)` — keep `index.ts` free of route logic
+- Middleware (`requireAuth`, `requireAdmin`), Zod schemas, and Prisma calls all live inside the route module, not in `index.ts`
+
+## Server-Side Validation
+
+- Always use **Zod** to validate request bodies in Express route handlers — never write manual `if`/`else` checks
+- Parse with `schema.safeParse(req.body)`; on failure, return `res.status(400).json({ error: result.error.issues[0].message })`
+- Define the Zod schema at module scope, above the route handler
+
 ## API Requests (Client)
 
 - **axios** — shared instance at `client/src/lib/api-client.ts` with `baseURL: http://localhost:3001` and `withCredentials: true`; always import `apiClient` from there — never use raw `fetch()` or hardcode the base URL

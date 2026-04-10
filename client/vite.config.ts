@@ -9,7 +9,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'core/schemas/users': path.resolve(__dirname, '../core/src/schemas/users.ts'),
     },
+    dedupe: ['zod'],
   },
   test: {
     environment: 'jsdom',

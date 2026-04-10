@@ -1,15 +1,9 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import UsersTable from "@/components/UsersTable";
+import CreateUserDialog from "@/components/CreateUserDialog";
 
 type User = {
   id: string;
@@ -20,6 +14,7 @@ type User = {
 };
 
 export default function UsersPage() {
+  const [open, setOpen] = useState(false);
   const { data: users = [], isPending, isError } = useQuery({
     queryKey: ["users"],
     queryFn: () => apiClient.get<User[]>("/api/users").then((res) => res.data),
@@ -30,58 +25,13 @@ export default function UsersPage() {
       <h1 className="text-2xl font-semibold">Users</h1>
       <p className="text-muted-foreground mt-1">Manage system users.</p>
 
-      <div className="mt-6">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50 hover:bg-muted/50">
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Joined</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isPending &&
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                </TableRow>
-              ))
-            }
-            {isError && (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center text-destructive">
-                  Failed to load users.
-                </TableCell>
-              </TableRow>
-            )}
-            {!isPending && !isError && users.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No users found.
-                </TableCell>
-              </TableRow>
-            )}
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  <Badge variant={user.role === "Admin" ? "default" : "secondary"}>
-                    {user.role}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="mt-6 flex justify-end mb-4">
+        <Button onClick={() => setOpen(true)}>Create User</Button>
       </div>
+
+      <UsersTable users={users} isPending={isPending} isError={isError} />
+
+      <CreateUserDialog open={open} onOpenChange={setOpen} />
     </div>
   );
 }

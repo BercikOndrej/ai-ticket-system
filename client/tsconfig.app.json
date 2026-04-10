@@ -23,7 +23,8 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "core/schemas/users": ["../core/src/schemas/users.ts"]
     }
   },
   "include": ["src"]

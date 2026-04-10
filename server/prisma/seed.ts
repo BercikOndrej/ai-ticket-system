@@ -1,6 +1,6 @@
-import { auth } from "../src/auth";
 import { prisma } from "../src/db";
 import { UserRole } from "../src/enums";
+import { createUser } from "../src/lib/users";
 
 const required = (name: string): string => {
   const value = process.env[name];
@@ -25,25 +25,7 @@ async function upsertUser(
     return;
   }
 
-  const ctx = await auth.$context;
-  const hashedPassword = await ctx.password.hash(password);
-  const now = new Date();
-
-  const user = await prisma.user.create({
-    data: { name, email, emailVerified: false, role, createdAt: now, updatedAt: now },
-  });
-
-  await prisma.account.create({
-    data: {
-      accountId: user.id,
-      providerId: "credential",
-      userId: user.id,
-      password: hashedPassword,
-      createdAt: now,
-      updatedAt: now,
-    },
-  });
-
+  await createUser(name, email, password, role);
   console.log(`Created ${role}: ${email}`);
 }
 

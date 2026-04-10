@@ -10,7 +10,10 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "core/schemas/users": ["../core/src/schemas/users.ts"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
