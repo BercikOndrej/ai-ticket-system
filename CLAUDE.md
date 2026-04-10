@@ -42,13 +42,6 @@ npx prisma migrate dev     # Create and apply migrations
 npx prisma studio          # Open database GUI
 ```
 
-### E2E Tests (root directory)
-
-```bash
-npm run test:e2e      # Run Playwright tests (headless)
-npm run test:e2e:ui   # Run Playwright tests with UI
-```
-
 ## Documentation
 
 Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch current documentation before writing or modifying code that uses any library, framework, or API. Do not rely on training data alone — docs may have changed.
@@ -77,11 +70,9 @@ Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch cu
 
 ## E2E Testing
 
-- **Framework:** Playwright — config at root `playwright.config.ts`, tests in `e2e/`
-- **Test database:** Separate PostgreSQL DB; connection string goes in `server/.env.test` (gitignored). Use `server/.env.test.example` as the template
-- **Global setup** (`e2e/global-setup.ts`): runs `prisma migrate deploy` then `npm run seed` against the test DB before every run — idempotent, safe to re-run
-- **Server in tests:** started automatically via `webServer` with env vars from `server/.env.test`, so the dev DB is never touched
-- **Rate limiting** on `/api/auth/sign-in` is **production-only** (`NODE_ENV === "production"`) — disabled in dev and test
+**Always delegate E2E test writing to the `e2e-test-writer` sub-agent** — never write Playwright tests inline. This applies every time tests are requested, regardless of scope (new feature, bug fix, auth flow, etc.).
+
+Use the Agent tool with `subagent_type: "e2e-test-writer"` and include in the prompt: the feature being tested, relevant source file paths, and any context about routes, roles, or API endpoints involved.
 
 ## Environments Variables
 
