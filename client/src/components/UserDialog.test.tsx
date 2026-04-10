@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import axios from "axios";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { UserRole } from "core/enums";
 import { render } from "@/test/render";
 import UserDialog from "./UserDialog";
 
@@ -43,7 +44,7 @@ const MOCK_USER = {
   id: "user-1",
   name: "johndoe",
   email: "john@example.com",
-  role: "Agent",
+  role: UserRole.Agent,
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 

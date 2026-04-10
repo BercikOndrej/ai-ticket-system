@@ -1,4 +1,1 @@
-export enum UserRole {
-  Admin = "Admin",
-  Agent = "Agent",
-}
+export { UserRole } from "core/enums";

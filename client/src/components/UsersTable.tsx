@@ -1,4 +1,5 @@
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
+import { UserRole } from "core/enums";
 import {
   Table,
   TableBody,
@@ -24,9 +25,10 @@ interface UsersTableProps {
   isPending: boolean;
   isError: boolean;
   onEdit: (user: User) => void;
+  onDelete: (user: User) => void;
 }
 
-export default function UsersTable({ users, isPending, isError, onEdit }: UsersTableProps) {
+export default function UsersTable({ users, isPending, isError, onEdit, onDelete }: UsersTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -76,10 +78,10 @@ export default function UsersTable({ users, isPending, isError, onEdit }: UsersT
             <TableCell className="font-medium">{user.name}</TableCell>
             <TableCell>{user.email}</TableCell>
             <TableCell>
-              <Badge variant={user.role === "Admin" ? "default" : "secondary"}>{user.role}</Badge>
+              <Badge variant={user.role === UserRole.Admin ? "default" : "secondary"}>{user.role}</Badge>
             </TableCell>
             <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-            <TableCell>
+            <TableCell className="flex gap-1">
               <Button
                 variant="ghost"
                 size="icon"
@@ -88,6 +90,16 @@ export default function UsersTable({ users, isPending, isError, onEdit }: UsersT
               >
                 <Pencil className="h-4 w-4" />
               </Button>
+              {user.role !== UserRole.Admin && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDelete(user)}
+                  aria-label={`Delete ${user.name}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </TableCell>
           </TableRow>
         ))}

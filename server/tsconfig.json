@@ -12,7 +12,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "core/schemas/users": ["../core/src/schemas/users.ts"]
+      "core/schemas/users": ["../core/src/schemas/users.ts"],
+      "core/enums": ["../core/src/enums.ts"]
     }
   },
   "include": ["src"],

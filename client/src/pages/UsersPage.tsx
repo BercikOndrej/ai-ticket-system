@@ -1,18 +1,44 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import apiClient from "@/lib/api-client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { UserPlus } from "lucide-react";
+import apiClient from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import UsersTable, { type User } from "@/components/UsersTable";
 import UserDialog from "@/components/UserDialog";
 
 export default function UsersPage() {
+  const queryClient = useQueryClient();
   const [dialogUser, setDialogUser] = useState<User | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   const { data: users = [], isPending, isError } = useQuery({
     queryKey: ["users"],
     queryFn: () => apiClient.get<User[]>("/api/users").then((res) => res.data),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/api/users/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("User deleted.");
+      setUserToDelete(null);
+    },
+    onError: () => {
+      toast.error("Failed to delete user.");
+      setUserToDelete(null);
+    },
   });
 
   function openCreate() {
@@ -42,6 +68,7 @@ export default function UsersPage() {
         isPending={isPending}
         isError={isError}
         onEdit={openEdit}
+        onDelete={setUserToDelete}
       />
 
       <UserDialog
@@ -50,6 +77,25 @@ export default function UsersPage() {
         onOpenChange={setIsDialogOpen}
         user={dialogUser ?? undefined}
       />
+
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {userToDelete?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will deactivate the account. The user will no longer be able to log in.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => userToDelete && deleteMutation.mutate(userToDelete.id)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

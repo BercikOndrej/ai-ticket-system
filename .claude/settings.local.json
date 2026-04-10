@@ -30,7 +30,9 @@
       "Bash(mkdir -p \"C:/Users/bercik/Desktop/Work/AI/ticket-system/e2e/setup\")",
       "Bash(echo \"EXIT:$?\")",
       "Bash(npm test:*)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(awk '{print $NF}')",
+      "Bash(node:*)"
     ]
   }
 }

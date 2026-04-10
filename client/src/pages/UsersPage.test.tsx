@@ -1,5 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { UserRole } from "core/enums";
 import { render } from "@/test/render";
 import UsersPage from "./UsersPage";
 
@@ -17,14 +18,14 @@ const USERS = [
     id: "1",
     name: "Alice Admin",
     email: "alice@example.com",
-    role: "Admin",
+    role: UserRole.Admin,
     createdAt: "2026-01-01T00:00:00.000Z",
   },
   {
     id: "2",
     name: "Bob Agent",
     email: "bob@example.com",
-    role: "Agent",
+    role: UserRole.Agent,
     createdAt: "2026-02-15T00:00:00.000Z",
   },
 ];

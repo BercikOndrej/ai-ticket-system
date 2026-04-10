@@ -11,6 +11,7 @@ CREATE TABLE "user" (
     "role" "UserRole" NOT NULL DEFAULT 'Agent',
     "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "user_pkey" PRIMARY KEY ("id")
 );

@@ -74,9 +74,10 @@ Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch cu
 ## Shared Code (core/)
 
 - Validation schemas and other logic shared between client and server live in `core/src/` at the monorepo root
-- Import them as `import { ... } from "core/schemas/<resource>"` in both client and server
+- Import them as `import { ... } from "core/schemas/<resource>"` or `import { ... } from "core/enums"` in both client and server
 - The alias is configured in `client/vite.config.ts` (Vite alias + `dedupe: ['zod']`) and both `tsconfig` files (`paths`); the server dev script registers `tsconfig-paths/register` so the alias works at runtime
 - Never duplicate a Zod schema — if the same shape is validated on both sides, define it once in `core/` and import it in both
+- **Never use magic strings for roles** — always use the `UserRole` enum from `core/enums` (`UserRole.Admin`, `UserRole.Agent`). This applies to both client and server code, including tests. When adding a new path alias in `client/vite.config.ts`, add the matching entry to `client/tsconfig.app.json` and `server/tsconfig.json` too
 
 ## Server Route Organization
 

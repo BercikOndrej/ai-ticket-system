@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { ZodType } from "zod";
 import { createUserSchema, editUserSchema } from "core/schemas/users";
+import { UserRole } from "core/enums";
 import { requireAuth, requireAdmin } from "../middleware/auth";
 import { prisma } from "../db";
 import { auth } from "../auth";
@@ -31,6 +32,7 @@ function handleMutationError(err: any, res: Response) {
 
 router.get("/", requireAuth, requireAdmin, async (_req, res) => {
   const users = await prisma.user.findMany({
+    where: { deletedAt: null },
     select: { id: true, name: true, email: true, role: true, createdAt: true },
     orderBy: { createdAt: "asc" },
   });
@@ -65,7 +67,7 @@ router.patch(
     const data = parseBody(editUserSchema, req.body, res);
     if (!data) return;
 
-    const existing = await prisma.user.findUnique({ where: { id } });
+    const existing = await prisma.user.findUnique({ where: { id, deletedAt: null } });
     if (!existing) {
       res.status(404).json({ error: "User not found" });
       return;
@@ -104,5 +106,27 @@ router.patch(
     }
   },
 );
+
+router.delete("/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  const { id } = req.params as { id: string };
+
+  const existing = await prisma.user.findUnique({ where: { id, deletedAt: null } });
+  if (!existing) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  if (existing.role === UserRole.Admin) {
+    res.status(403).json({ error: "Admin users cannot be deleted" });
+    return;
+  }
+
+  await prisma.$transaction([
+    prisma.session.deleteMany({ where: { userId: id } }),
+    prisma.user.update({ where: { id }, data: { deletedAt: new Date() } }),
+  ]);
+
+  res.status(204).send();
+});
 
 export default router;
