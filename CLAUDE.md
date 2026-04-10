@@ -62,6 +62,11 @@ Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch cu
 - **Ticket classifications:** `General question`, `Technical question`, `Request`, `Refund`
 - **Email ingestion:** Inbound via SendGrid/Mailgun webhooks, outbound replies via their APIs
 
+## API Requests (Client)
+
+- **axios** — shared instance at `client/src/lib/api-client.ts` with `baseURL: http://localhost:3001` and `withCredentials: true`; always import `apiClient` from there — never use raw `fetch()` or hardcode the base URL
+- **TanStack Query (`@tanstack/react-query`)** — `QueryClientProvider` is set up in `client/src/main.tsx`; use `useQuery` for reads and `useMutation` for writes; the query function should call `apiClient` and return `res.data`
+
 ## UI / Styling
 
 - **shadcn/ui** is installed in `client/` with the neutral (black & white) theme and Tailwind CSS v4

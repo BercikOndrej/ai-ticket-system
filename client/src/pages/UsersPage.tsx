@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import apiClient from "@/lib/api-client";
 import {
   Table,
   TableBody,
@@ -18,20 +19,10 @@ type User = {
 };
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("http://localhost:3001/api/users", { credentials: "include" })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load users");
-        return res.json() as Promise<User[]>;
-      })
-      .then(setUsers)
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: users = [], isPending, isError } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => apiClient.get<User[]>("/api/users").then((res) => res.data),
+  });
 
   return (
     <div>
@@ -49,21 +40,21 @@ export default function UsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading && (
+            {isPending && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
                   Loading…
                 </TableCell>
               </TableRow>
             )}
-            {error && (
+            {isError && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-destructive">
-                  {error}
+                  Failed to load users.
                 </TableCell>
               </TableRow>
             )}
-            {!loading && !error && users.length === 0 && (
+            {!isPending && !isError && users.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">
                   No users found.
