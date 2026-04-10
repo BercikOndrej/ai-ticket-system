@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type User = {
   id: string;
@@ -29,10 +30,10 @@ export default function UsersPage() {
       <h1 className="text-2xl font-semibold">Users</h1>
       <p className="text-muted-foreground mt-1">Manage system users.</p>
 
-      <div className="mt-6 rounded-md border">
+      <div className="mt-6">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
@@ -40,13 +41,16 @@ export default function UsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isPending && (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  Loading…
-                </TableCell>
-              </TableRow>
-            )}
+            {isPending &&
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                </TableRow>
+              ))
+            }
             {isError && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-destructive">
