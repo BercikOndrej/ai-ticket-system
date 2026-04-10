@@ -73,9 +73,17 @@ Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch cu
 - All UI components live in `client/src/components/ui/` — add new ones via `npx shadcn@latest add <component>`
 - Use shadcn components (`Button`, `Card`, `Input`, `Label`, `Separator`, etc.) for all new UI — do not write raw HTML buttons or hand-rolled form inputs
 
+## Unit / Component Testing (Client)
+
+**Always delegate unit/component test writing to the `unit-test-writer` sub-agent** — never write Vitest tests inline. Only write tests when explicitly asked.
+
+Use the Agent tool with `subagent_type: "unit-test-writer"` and include in the prompt: the component or file being tested, its file path, and any relevant context (props, API calls, roles, query keys).
+
+- **Run:** `npm test` (single run) or `npm run test:watch` (watch mode) in `client/`
+
 ## E2E Testing
 
-**Always delegate E2E test writing to the `e2e-test-writer` sub-agent** — never write Playwright tests inline. This applies every time tests are requested, regardless of scope (new feature, bug fix, auth flow, etc.).
+**Always delegate E2E test writing to the `e2e-test-writer` sub-agent** — never write Playwright tests inline. Only write tests when explicitly asked.
 
 Use the Agent tool with `subagent_type: "e2e-test-writer"` and include in the prompt: the feature being tested, relevant source file paths, and any context about routes, roles, or API endpoints involved.
 
