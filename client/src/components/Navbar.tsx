@@ -22,6 +22,12 @@ export default function Navbar() {
             <Logo />
             <span className="text-base font-semibold">SimpleTickets</span>
           </Link>
+          <Link
+            to="/tickets"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Tickets
+          </Link>
           {session?.user?.role === UserRole.Admin && (
             <Link
               to="/users"

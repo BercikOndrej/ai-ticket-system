@@ -7,6 +7,7 @@ import { auth } from "./auth";
 import { requireAuth } from "./middleware/auth";
 import { validateEnv } from "./config";
 import usersRouter from "./routes/users";
+import ticketsRouter from "./routes/tickets";
 import webhooksRouter from "./routes/webhooks";
 
 validateEnv();
@@ -45,6 +46,7 @@ app.get("/api/me", requireAuth, (req, res) => {
 });
 
 app.use("/api/users", usersRouter);
+app.use("/api/tickets", ticketsRouter);
 app.use("/api/webhooks", webhooksRouter);
 
 app.listen(PORT, () => {

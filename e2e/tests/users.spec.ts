@@ -4,6 +4,7 @@
  * End-to-end integration tests for the user management feature.
  *
  * Covers:
+ *   - List users: Admin sees seeded admin email in the table
  *   - Create user: Admin fills the dialog, submits, new row appears in table, toast shown
  *   - Edit user: Admin clicks pencil icon, changes name, submits, updated name appears, toast shown
  *   - Delete user: Admin clicks trash icon, confirms AlertDialog, row disappears, toast shown
@@ -15,16 +16,7 @@
  */
 
 import { test, expect } from "@playwright/test";
-import * as dotenv from "dotenv";
-import * as fs from "fs";
-import path from "path";
-import { ADMIN_FILE } from "../auth/paths";
-
-// Load test env vars so the seeded admin email is available at runtime.
-const envTestPath = path.resolve(__dirname, "../../../server/.env.test");
-if (fs.existsSync(envTestPath)) {
-  dotenv.config({ path: envTestPath });
-}
+import { loginAsAdmin, TEST_USERS } from "../fixtures/auth";
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -35,12 +27,10 @@ async function createUserViaUI(
   page: import("@playwright/test").Page,
   name: string,
   email: string,
-  password: string
+  password: string,
 ): Promise<void> {
   await page.getByRole("button", { name: "Add" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Create User" })
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Create User" })).toBeVisible();
 
   await page.getByLabel("Name").fill(name);
   await page.getByLabel("Email").fill(email);
@@ -48,7 +38,7 @@ async function createUserViaUI(
 
   const [response] = await Promise.all([
     page.waitForResponse(
-      (res) => res.url().includes("/api/users") && res.request().method() === "POST"
+      (res) => res.url().includes("/api/users") && res.request().method() === "POST",
     ),
     page.getByRole("button", { name: "Create User" }).click(),
   ]);
@@ -60,30 +50,18 @@ async function createUserViaUI(
 // 0. List users
 // ---------------------------------------------------------------------------
 test.describe("List users", () => {
-  test.use({ storageState: ADMIN_FILE });
-
-  test("should display the seeded admin user's email in the table", async ({
-    page,
-  }) => {
-    const adminEmail = process.env.SEED_ADMIN_EMAIL;
-    if (!adminEmail) {
-      throw new Error(
-        'Missing required env var "SEED_ADMIN_EMAIL". ' +
-          "Ensure server/.env.test is populated (see server/.env.test.example)."
-      );
-    }
+  test("should display the seeded admin user's email in the table", async ({ page }) => {
+    await loginAsAdmin(page);
 
     const [response] = await Promise.all([
       page.waitForResponse(
-        (res) =>
-          res.url().includes("/api/users") && res.request().method() === "GET"
+        (res) => res.url().includes("/api/users") && res.request().method() === "GET",
       ),
       page.goto("/users"),
     ]);
 
     expect(response.status()).toBe(200);
-
-    await expect(page.getByRole("cell", { name: adminEmail })).toBeVisible();
+    await expect(page.getByRole("cell", { name: TEST_USERS.admin.email })).toBeVisible();
   });
 });
 
@@ -91,11 +69,8 @@ test.describe("List users", () => {
 // 1. Create user
 // ---------------------------------------------------------------------------
 test.describe("Create user", () => {
-  test.use({ storageState: ADMIN_FILE });
-
-  test("should add the new user to the table and show a success toast", async ({
-    page,
-  }) => {
+  test("should add the new user to the table and show a success toast", async ({ page }) => {
+    await loginAsAdmin(page);
     await page.goto("/users");
 
     const name = `testuser${Date.now()}`;
@@ -104,9 +79,7 @@ test.describe("Create user", () => {
     await createUserViaUI(page, name, email, "Password123");
 
     // Dialog closes after success
-    await expect(
-      page.getByRole("heading", { name: "Create User" })
-    ).not.toBeVisible();
+    await expect(page.getByRole("heading", { name: "Create User" })).not.toBeVisible();
 
     // Toast notification
     await expect(page.getByText("User created.")).toBeVisible();
@@ -121,11 +94,8 @@ test.describe("Create user", () => {
 // 2. Edit user
 // ---------------------------------------------------------------------------
 test.describe("Edit user", () => {
-  test.use({ storageState: ADMIN_FILE });
-
-  test("should update the user name in the table and show a success toast", async ({
-    page,
-  }) => {
+  test("should update the user name in the table and show a success toast", async ({ page }) => {
+    await loginAsAdmin(page);
     await page.goto("/users");
 
     // Create a user to edit so the test is self-contained
@@ -139,9 +109,7 @@ test.describe("Edit user", () => {
     // Click the edit (pencil) button for the row we just created
     await page.getByRole("button", { name: `Edit ${originalName}` }).click();
 
-    await expect(
-      page.getByRole("heading", { name: "Edit User" })
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Edit User" })).toBeVisible();
 
     const updatedName = `${originalName}Updated`;
     await page.getByLabel("Name").clear();
@@ -149,8 +117,7 @@ test.describe("Edit user", () => {
 
     const [response] = await Promise.all([
       page.waitForResponse(
-        (res) =>
-          res.url().includes("/api/users/") && res.request().method() === "PATCH"
+        (res) => res.url().includes("/api/users/") && res.request().method() === "PATCH",
       ),
       page.getByRole("button", { name: "Save Changes" }).click(),
     ]);
@@ -158,9 +125,7 @@ test.describe("Edit user", () => {
     expect(response.status()).toBe(200);
 
     // Dialog closes
-    await expect(
-      page.getByRole("heading", { name: "Edit User" })
-    ).not.toBeVisible();
+    await expect(page.getByRole("heading", { name: "Edit User" })).not.toBeVisible();
 
     // Toast notification
     await expect(page.getByText("User updated.")).toBeVisible();
@@ -169,9 +134,7 @@ test.describe("Edit user", () => {
     await expect(page.getByRole("cell", { name: updatedName, exact: true })).toBeVisible();
 
     // Original name is gone
-    await expect(
-      page.getByRole("cell", { name: originalName, exact: true })
-    ).not.toBeVisible();
+    await expect(page.getByRole("cell", { name: originalName, exact: true })).not.toBeVisible();
   });
 });
 
@@ -179,11 +142,8 @@ test.describe("Edit user", () => {
 // 3. Delete user
 // ---------------------------------------------------------------------------
 test.describe("Delete user", () => {
-  test.use({ storageState: ADMIN_FILE });
-
-  test("should remove the user from the table and show a success toast", async ({
-    page,
-  }) => {
+  test("should remove the user from the table and show a success toast", async ({ page }) => {
+    await loginAsAdmin(page);
     await page.goto("/users");
 
     // Create a dedicated user so deletion does not affect other tests
@@ -197,15 +157,11 @@ test.describe("Delete user", () => {
     await page.getByRole("button", { name: `Delete ${name}` }).click();
 
     // AlertDialog confirmation
-    await expect(
-      page.getByRole("heading", { name: `Delete ${name}?` })
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: `Delete ${name}?` })).toBeVisible();
 
     const [response] = await Promise.all([
       page.waitForResponse(
-        (res) =>
-          res.url().includes("/api/users/") &&
-          res.request().method() === "DELETE"
+        (res) => res.url().includes("/api/users/") && res.request().method() === "DELETE",
       ),
       page.getByRole("button", { name: "Delete" }).click(),
     ]);
@@ -224,11 +180,8 @@ test.describe("Delete user", () => {
 // 4. Admin users cannot be deleted
 // ---------------------------------------------------------------------------
 test.describe("Admin role protection", () => {
-  test.use({ storageState: ADMIN_FILE });
-
-  test("should not render a delete button for Admin-role users", async ({
-    page,
-  }) => {
+  test("should not render a delete button for Admin-role users", async ({ page }) => {
+    await loginAsAdmin(page);
     await page.goto("/users");
 
     // Collect all rows that have an Admin badge
@@ -246,7 +199,7 @@ test.describe("Admin role protection", () => {
       const adminName = await row.getByRole("cell").first().textContent();
       if (adminName) {
         await expect(
-          page.getByRole("button", { name: `Delete ${adminName.trim()}` })
+          page.getByRole("button", { name: `Delete ${adminName.trim()}` }),
         ).not.toBeVisible();
       }
     }

@@ -37,12 +37,12 @@ import * as dotenv from "dotenv";
 import * as fs from "fs";
 import path from "path";
 import { Pool } from "pg";
-import { TicketStatus } from "../../../core/src/enums";
+import { TicketStatus } from "../../core/src/enums";
 
 // ---------------------------------------------------------------------------
 // Load test env vars so WEBHOOK_SECRET and DATABASE_URL are available.
 // ---------------------------------------------------------------------------
-const envTestPath = path.resolve(__dirname, "../../../server/.env.test");
+const envTestPath = path.resolve(__dirname, "../../server/.env.test");
 if (fs.existsSync(envTestPath)) {
   dotenv.config({ path: envTestPath });
 }
@@ -72,7 +72,7 @@ function authHeaders(): Record<string, string> {
  * REST tickets PATCH endpoint (which does not exist yet).
  */
 async function closeTicketViaDb(ticketId: number): Promise<void> {
-  await pool.query('UPDATE ticket SET status = $1 WHERE id = $2', [TicketStatus.Closed, ticketId]);
+  await pool.query("UPDATE ticket SET status = $1 WHERE id = $2", [TicketStatus.Closed, ticketId]);
 }
 
 // ---------------------------------------------------------------------------
@@ -98,9 +98,7 @@ test.describe("POST /api/webhooks/inbound-email", () => {
   // 1. Happy path
   // -------------------------------------------------------------------------
   test.describe("Happy path", () => {
-    test("should create a new ticket and return 201 with Open status", async ({
-      request,
-    }) => {
+    test("should create a new ticket and return 201 with Open status", async ({ request }) => {
       const email = `happy-${Date.now()}@e2e.local`;
       usedEmails.push(email);
 
@@ -130,9 +128,7 @@ test.describe("POST /api/webhooks/inbound-email", () => {
   // 2. Authentication
   // -------------------------------------------------------------------------
   test.describe("Authentication", () => {
-    test("should return 401 when X-Webhook-Secret header is missing", async ({
-      request,
-    }) => {
+    test("should return 401 when X-Webhook-Secret header is missing", async ({ request }) => {
       const email = `no-secret-${Date.now()}@e2e.local`;
       usedEmails.push(email);
       const response = await request.post(WEBHOOK_URL, {
@@ -148,9 +144,7 @@ test.describe("POST /api/webhooks/inbound-email", () => {
       expect(response.status()).toBe(401);
     });
 
-    test("should return 401 when X-Webhook-Secret has the wrong value", async ({
-      request,
-    }) => {
+    test("should return 401 when X-Webhook-Secret has the wrong value", async ({ request }) => {
       const email = `wrong-secret-${Date.now()}@e2e.local`;
       usedEmails.push(email);
       const response = await request.post(WEBHOOK_URL, {
@@ -205,9 +199,7 @@ test.describe("POST /api/webhooks/inbound-email", () => {
       expect(typeof json.error).toBe("string");
     });
 
-    test("should return 400 when fromEmail is not a valid email address", async ({
-      request,
-    }) => {
+    test("should return 400 when fromEmail is not a valid email address", async ({ request }) => {
       const response = await request.post(WEBHOOK_URL, {
         data: {
           subject: "Some subject",

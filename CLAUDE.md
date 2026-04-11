@@ -124,6 +124,19 @@ Use the Agent tool with `subagent_type: "unit-test-writer"` and include in the p
 
 Use the Agent tool with `subagent_type: "e2e-test-writer"` and include in the prompt: the feature being tested, relevant source file paths, and any context about routes, roles, or API endpoints involved.
 
+### E2E Infrastructure
+
+- **Framework:** Playwright, configured in `playwright.config.ts` at the repo root
+- **Run:** `npm run test:e2e` (headless) or `npm run test:e2e:ui` (interactive UI) from the repo root
+- **Test directory:** `e2e/tests/` — one spec file per feature (`auth.spec.ts`, `users.spec.ts`, `tickets.spec.ts`, `inbound-email.spec.ts`)
+- **Fixtures:** `e2e/fixtures/auth.ts` — shared helpers: `login`, `loginAsAdmin`, `loginAsAgent`, `logout`, `expectLoginPage`, `expectHomePage`, and `TEST_USERS` credentials (loaded from `server/.env.test`)
+- **Global setup/teardown:** `e2e/global-setup.ts` resets the test database (`npx prisma migrate reset --force`) and seeds it (`npx tsx prisma/seed.ts`); `e2e/global-teardown.ts` is a no-op (DB left intact for debugging)
+- **Test DB:** Separate PostgreSQL database configured via `server/.env.test` (`DATABASE_URL`); seeded with both an Admin and an Agent user
+- **Auth pattern:** No pre-saved storage state — tests log in via the UI using helpers from `e2e/fixtures/auth.ts`. Every `test.describe` block that needs auth calls `loginAsAdmin(page)` or `loginAsAgent(page)` in `beforeEach` or at the start of each test
+- **API-only tests:** `inbound-email.spec.ts` uses Playwright's `request` fixture (no browser). DB cleanup uses `pg` Pool directly (no Prisma client in tests)
+- **Web servers:** Playwright auto-starts both client (port 5173) and server (port 3001) via `webServer` config; server uses env vars from `server/.env.test`
+- **Single worker:** `workers: 1`, `fullyParallel: false` — tests run sequentially to avoid DB conflicts
+
 ## Environments Variables
 
 - Always when you add new variables into `.env` file verify that all variables are included in `.env.example` too but with placeholder values
