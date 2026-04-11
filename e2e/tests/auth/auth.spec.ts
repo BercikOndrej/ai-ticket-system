@@ -19,7 +19,7 @@ import { test, expect } from "@playwright/test";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
-import { ADMIN_FILE, AGENT_FILE } from "./auth.setup";
+import { ADMIN_FILE, AGENT_FILE } from "./paths";
 import { login, loginAndWait, logout } from "./helpers";
 
 // ---------------------------------------------------------------------------
@@ -202,12 +202,12 @@ test.describe("Role-based access — Agent", () => {
 // 5. Logout
 // ---------------------------------------------------------------------------
 test.describe("Logout", () => {
-  test.use({ storageState: ADMIN_FILE });
+  test.use({ storageState: { cookies: [], origins: [] } });
 
   test("should redirect to '/login' and remove the Logout button after clicking Logout", async ({
     page,
   }) => {
-    await page.goto("/");
+    await loginAndWait(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await logout(page);
 
     await expect(
@@ -217,9 +217,6 @@ test.describe("Logout", () => {
   });
 });
 
-// This test must own its own fresh session so the signOut() call in the test
-// above (which invalidates the shared ADMIN_FILE cookie server-side) doesn't
-// cause the Logout button to be unreachable here.
 test.describe("Logout — re-authentication check", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 

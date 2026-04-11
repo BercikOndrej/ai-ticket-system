@@ -7,7 +7,7 @@
     "dev": "ts-node-dev --require tsconfig-paths/register --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/src/index.js",
-    "seed": "ts-node --transpile-only prisma/seed.ts",
+    "seed": "ts-node --require tsconfig-paths/register --transpile-only prisma/seed.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

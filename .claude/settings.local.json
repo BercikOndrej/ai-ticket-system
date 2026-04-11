@@ -32,7 +32,14 @@
       "Bash(npm test:*)",
       "Bash(xargs grep:*)",
       "Bash(awk '{print $NF}')",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(ls /c/Users/bercik/Desktop/Work/AI/ticket-system/*.config.ts)",
+      "Bash(git -C /c/Users/bercik/Desktop/Work/AI/ticket-system show HEAD:agent.json)",
+      "Bash(git -C /c/Users/bercik/Desktop/Work/AI/ticket-system log --all --full-history -- agent.json)",
+      "Bash(git -C /c/Users/bercik/Desktop/Work/AI/ticket-system log --all --full-history -- \"*.json\")",
+      "Bash(git -C /c/Users/bercik/Desktop/Work/AI/ticket-system stash list)",
+      "Read(//c/Users/bercik/.claude//**)",
+      "Read(//c/Users/bercik/.claude/**)"
     ]
   }
 }

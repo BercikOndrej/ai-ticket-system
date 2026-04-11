@@ -18,15 +18,15 @@ import { test as setup, expect } from "@playwright/test";
 import path from "path";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
+import { ADMIN_FILE, AGENT_FILE } from "./paths";
+
+export { ADMIN_FILE, AGENT_FILE };
 
 // Load test env vars so the setup knows the seeded credentials.
 const envTestPath = path.resolve(__dirname, "../../../server/.env.test");
 if (fs.existsSync(envTestPath)) {
   dotenv.config({ path: envTestPath });
 }
-
-export const ADMIN_FILE = path.join(__dirname, "../../.auth/admin.json");
-export const AGENT_FILE = path.join(__dirname, "../../.auth/agent.json");
 
 function requireEnv(name: string): string {
   const value = process.env[name];
