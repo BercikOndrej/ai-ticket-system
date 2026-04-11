@@ -22,28 +22,38 @@ async function globalSetup() {
     throw new Error("DATABASE_URL is not set in server/.env.test");
   }
 
-  // Ensure the test database exists before running migrations.
   const url = new URL(databaseUrl);
-  const dbName = url.pathname.slice(1); // strip leading "/"
+  const dbName = url.pathname.slice(1);
   const adminUrl = new URL(databaseUrl);
   adminUrl.pathname = "/postgres";
 
   // Use pg from the server's node_modules (already a dependency there).
-  // Always drop and recreate for a clean migration history on every run.
   const { Client } = require(path.join(serverDir, "node_modules/pg"));
-  const client = new Client({ connectionString: adminUrl.toString() });
-  await client.connect();
-  // Terminate any open connections so the database can be dropped.
-  await client.query(
-    `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()`,
+
+  // Create the database only if it doesn't already exist.
+  // Preserving the DB between runs keeps user sessions alive so
+  // auth.setup.ts can skip re-logging in when the session is still valid.
+  const adminClient = new Client({ connectionString: adminUrl.toString() });
+  await adminClient.connect();
+  const { rowCount } = await adminClient.query(
+    `SELECT 1 FROM pg_database WHERE datname = $1`,
     [dbName]
   );
-  await client.query(`DROP DATABASE IF EXISTS "${dbName}"`);
-  await client.query(`CREATE DATABASE "${dbName}"`);
-  await client.end();
+  if (rowCount === 0) {
+    await adminClient.query(`CREATE DATABASE "${dbName}"`);
+    console.log(`[global-setup] Created database "${dbName}"`);
+  }
+  await adminClient.end();
 
   console.log("[global-setup] Running migrations on test database...");
   execSync("npx prisma migrate deploy", { cwd: serverDir, env, stdio: "inherit" });
+
+  // Truncate test-data tables (not auth tables) so each run starts clean
+  // without dropping the whole DB (which would invalidate sessions).
+  const testClient = new Client({ connectionString: databaseUrl });
+  await testClient.connect();
+  await testClient.query(`TRUNCATE TABLE ticket RESTART IDENTITY CASCADE`);
+  await testClient.end();
 
   console.log("[global-setup] Seeding test users...");
   execSync("npm run seed", { cwd: serverDir, env, stdio: "inherit" });

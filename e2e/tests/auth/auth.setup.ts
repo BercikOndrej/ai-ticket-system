@@ -12,6 +12,10 @@
  *
  * If an env var is missing the setup will throw immediately with a clear
  * message so the developer knows what to fix.
+ *
+ * Sessions are preserved between runs: if the existing storage state file
+ * contains a cookie that is still accepted by /api/me, login is skipped
+ * entirely so the auth files stay stable.
  */
 
 import { test as setup, expect } from "@playwright/test";
@@ -28,6 +32,8 @@ if (fs.existsSync(envTestPath)) {
   dotenv.config({ path: envTestPath });
 }
 
+const SERVER_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3001";
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -39,10 +45,40 @@ function requireEnv(name: string): string {
   return value;
 }
 
+/**
+ * Returns true if the session cookie stored in the given storage state file
+ * is still accepted by the server (GET /api/me returns 200).
+ * Returns false if the file doesn't exist, has no session cookie, or the
+ * server rejects the session.
+ */
+async function isSessionValid(storageStateFile: string): Promise<boolean> {
+  if (!fs.existsSync(storageStateFile)) return false;
+
+  try {
+    const { cookies } = JSON.parse(fs.readFileSync(storageStateFile, "utf-8"));
+    const sessionCookie = cookies?.find(
+      (c: { name: string }) => c.name === "better-auth.session_token"
+    );
+    if (!sessionCookie) return false;
+
+    const res = await fetch(`${SERVER_URL}/api/me`, {
+      headers: { Cookie: `better-auth.session_token=${sessionCookie.value}` },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Admin login
 // ---------------------------------------------------------------------------
 setup("authenticate as admin", async ({ page }) => {
+  if (await isSessionValid(ADMIN_FILE)) {
+    console.log("[auth-setup] Admin session still valid — skipping login");
+    return;
+  }
+
   const email = requireEnv("SEED_ADMIN_EMAIL");
   const password = requireEnv("SEED_ADMIN_PASSWORD");
 
@@ -62,6 +98,11 @@ setup("authenticate as admin", async ({ page }) => {
 // Agent login
 // ---------------------------------------------------------------------------
 setup("authenticate as agent", async ({ page }) => {
+  if (await isSessionValid(AGENT_FILE)) {
+    console.log("[auth-setup] Agent session still valid — skipping login");
+    return;
+  }
+
   const email = requireEnv("SEED_AGENT_EMAIL");
   const password = requireEnv("SEED_AGENT_PASSWORD");
 
