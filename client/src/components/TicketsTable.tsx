@@ -15,7 +15,7 @@ export type Ticket = {
   subject: string;
   fromName: string;
   fromEmail: string;
-  status: string;
+  status: TicketStatus;
   classification: string | null;
   createdAt: string;
 };
@@ -33,7 +33,7 @@ const classificationLabels: Record<string, string> = {
   [TicketClassification.Refund]: "Refund",
 };
 
-const statusVariant: Record<string, "default" | "secondary" | "outline"> = {
+const statusVariant: Record<TicketStatus, "default" | "secondary" | "outline"> = {
   [TicketStatus.Open]: "default",
   [TicketStatus.Resolved]: "secondary",
   [TicketStatus.Closed]: "outline",

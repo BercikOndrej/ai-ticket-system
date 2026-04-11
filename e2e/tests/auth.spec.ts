@@ -3,7 +3,6 @@ import {
   TEST_USERS,
   login,
   loginAsAdmin,
-  loginAsAgent,
   logout,
   expectLoginPage,
   expectHomePage,
@@ -15,16 +14,6 @@ test.describe("Authentication", () => {
       await page.goto("/login");
     });
 
-    test("should display login form with all elements", async ({ page }) => {
-      await expect(page.getByText("Ticket System")).toBeVisible();
-      await expect(page.getByText(/sign in to your account/i)).toBeVisible();
-
-      await expect(page.getByLabel("Email")).toBeVisible();
-      await expect(page.getByLabel("Password")).toBeVisible();
-
-      await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
-    });
-
     test("should login successfully with valid admin credentials", async ({ page }) => {
       await login(page, TEST_USERS.admin);
 
@@ -33,105 +22,10 @@ test.describe("Authentication", () => {
       await expect(page.getByText(TEST_USERS.admin.name)).toBeVisible();
     });
 
-    test("should show error with invalid email format", async ({ page }) => {
-      await page.getByLabel("Email").fill("invalid-email");
-      await page.getByLabel("Password").fill("password123");
-      await page.getByRole("button", { name: /sign in/i }).click();
-
-      await expect(page.getByText("Enter a valid email address")).toBeVisible();
-
-      await expectLoginPage(page);
-    });
-
-    test("should show error with empty email", async ({ page }) => {
-      await page.getByLabel("Password").fill("password123");
-      await page.getByRole("button", { name: /sign in/i }).click();
-
-      await expect(page.getByText("Enter a valid email address")).toBeVisible();
-
-      await expectLoginPage(page);
-    });
-
-    test("should show error with empty password", async ({ page }) => {
-      await page.getByLabel("Email").fill(TEST_USERS.admin.email);
-      await page.getByRole("button", { name: /sign in/i }).click();
-
-      await expect(page.getByText("Password is required")).toBeVisible();
-
-      await expectLoginPage(page);
-    });
-
-    test("should show error with empty email and password", async ({ page }) => {
-      await page.getByRole("button", { name: /sign in/i }).click();
-
-      await expect(page.getByText("Enter a valid email address")).toBeVisible();
-      await expect(page.getByText("Password is required")).toBeVisible();
-
-      await expectLoginPage(page);
-    });
-
-    test("should show error with invalid email (non-existent user)", async ({ page }) => {
-      await login(page, {
-        email: "nonexistent@example.com",
-        password: "password123",
-      });
-
-      await expect(page.getByText(/invalid email or password/i)).toBeVisible();
-
-      await expectLoginPage(page);
-    });
-
-    test("should show error with incorrect password", async ({ page }) => {
-      await login(page, {
-        email: TEST_USERS.admin.email,
-        password: "wrongpassword",
-      });
-
-      await expect(page.getByText(/invalid email or password/i)).toBeVisible();
-
-      await expectLoginPage(page);
-    });
-
-    test("should show loading state during login", async ({ page }) => {
-      let resolveDelay!: () => void;
-      const delay = new Promise<void>((resolve) => {
-        resolveDelay = resolve;
-      });
-
-      await page.route("**/api/auth/sign-in/email", async (route) => {
-        await delay;
-        await route.continue();
-      });
-
-      await page.getByLabel("Email").fill(TEST_USERS.admin.email);
-      await page.getByLabel("Password").fill(TEST_USERS.admin.password);
-      await page.getByRole("button", { name: /sign in/i }).click();
-
-      await expect(page.getByText("Signing in...")).toBeVisible();
-
-      resolveDelay();
-      await page.unrouteAll({ behavior: "ignoreErrors" });
-    });
-
     test("should redirect to home if already authenticated", async ({ page }) => {
       await loginAsAdmin(page);
 
       await page.goto("/login");
-
-      await expectHomePage(page);
-    });
-
-    test("should clear server error on new submission", async ({ page }) => {
-      await login(page, {
-        email: TEST_USERS.admin.email,
-        password: "wrongpassword",
-      });
-
-      await expect(page.getByText(/invalid email or password/i)).toBeVisible();
-
-      await page.getByLabel("Email").clear();
-      await page.getByLabel("Password").clear();
-      await login(page, TEST_USERS.admin);
 
       await expectHomePage(page);
     });

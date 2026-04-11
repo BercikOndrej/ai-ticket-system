@@ -118,4 +118,20 @@ describe("UsersPage", () => {
     const expected = new Date("2026-01-01T00:00:00.000Z").toLocaleDateString();
     expect(await screen.findByText(expected)).toBeInTheDocument();
   });
+
+  it("should not render a delete button for Admin-role users", async () => {
+    mockGet.mockResolvedValue({ data: USERS });
+    renderPage();
+
+    // Wait for data to load before asserting button presence.
+    await screen.findByRole("row", { name: /alice admin/i });
+
+    expect(
+      screen.queryByRole("button", { name: "Delete Alice Admin" }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.getByRole("button", { name: "Delete Bob Agent" }),
+    ).toBeInTheDocument();
+  });
 });

@@ -110,6 +110,17 @@ Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch cu
 - All UI components live in `client/src/components/ui/` — add new ones via `npx shadcn@latest add <component>`
 - Use shadcn components (`Button`, `Card`, `Input`, `Label`, `Separator`, etc.) for all new UI — do not write raw HTML buttons or hand-rolled form inputs
 
+## Testing Strategy
+
+**Default to unit tests.** Write unit/component tests for the vast majority of cases — form validation, rendering logic, error states, loading states, role-based UI differences, API mock responses. Unit tests are fast, isolated, and cheap to maintain.
+
+**Use E2E tests only when unit tests cannot cover the scenario** — specifically:
+- Full authentication flows (real session creation, session persistence, logout)
+- Multi-step CRUD workflows that depend on real API responses changing DB state
+- Cross-cutting concerns that span both client and server (e.g. webhook ingestion + DB state)
+
+When in doubt, prefer a unit test.
+
 ## Unit / Component Testing (Client)
 
 **Always delegate unit/component test writing to the `unit-test-writer` sub-agent** — never write Vitest tests inline. Only write tests when explicitly asked.
@@ -121,6 +132,8 @@ Use the Agent tool with `subagent_type: "unit-test-writer"` and include in the p
 ## E2E Testing
 
 **Always delegate E2E test writing to the `e2e-test-writer` sub-agent** — never write Playwright tests inline. Only write tests when explicitly asked.
+
+**Only write E2E tests for scenarios that genuinely require a real browser + real backend** (see Testing Strategy above). Do not write E2E tests for form validation, rendering logic, or anything that can be covered by a unit test.
 
 Use the Agent tool with `subagent_type: "e2e-test-writer"` and include in the prompt: the feature being tested, relevant source file paths, and any context about routes, roles, or API endpoints involved.
 

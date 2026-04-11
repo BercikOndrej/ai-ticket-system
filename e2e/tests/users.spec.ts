@@ -176,32 +176,3 @@ test.describe("Delete user", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// 4. Admin users cannot be deleted
-// ---------------------------------------------------------------------------
-test.describe("Admin role protection", () => {
-  test("should not render a delete button for Admin-role users", async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.goto("/users");
-
-    // Collect all rows that have an Admin badge
-    const adminRows = page.getByRole("row").filter({
-      has: page.getByRole("cell").filter({ hasText: "Admin" }),
-    });
-
-    // There must be at least one admin row for this assertion to be meaningful
-    await expect(adminRows.first()).toBeVisible();
-
-    // For every admin row, confirm there is no Delete button
-    const count = await adminRows.count();
-    for (let i = 0; i < count; i++) {
-      const row = adminRows.nth(i);
-      const adminName = await row.getByRole("cell").first().textContent();
-      if (adminName) {
-        await expect(
-          page.getByRole("button", { name: `Delete ${adminName.trim()}` }),
-        ).not.toBeVisible();
-      }
-    }
-  });
-});

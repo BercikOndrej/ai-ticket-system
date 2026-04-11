@@ -70,6 +70,49 @@ const expected = new Date(isoString).toLocaleDateString();
 expect(await screen.findByText(expected)).toBeInTheDocument();
 ```
 
+## Mocking react-router-dom (Navigate + useNavigate)
+
+Variables referenced inside `vi.mock` factories must be hoisted with `vi.hoisted()` or they hit the temporal dead zone (Vitest hoists the factory before `const` declarations are initialised).
+
+```ts
+const { mockNavigate, MockNavigate } = vi.hoisted(() => ({
+  mockNavigate: vi.fn(),
+  MockNavigate: vi.fn(() => null),
+}));
+
+vi.mock("react-router-dom", () => ({
+  Navigate: MockNavigate,
+  useNavigate: vi.fn(() => mockNavigate),
+}));
+```
+
+When asserting that `MockNavigate` (a function component mock) was called, React only passes one argument (the props object). Use `undefined` as the second argument — `expect.anything()` will fail:
+
+```ts
+expect(MockNavigate).toHaveBeenCalledWith(
+  expect.objectContaining({ to: "/", replace: true }),
+  undefined,
+);
+```
+
+## Mocking BetterAuth (useSession + signIn)
+
+```ts
+const { mockSignInEmail } = vi.hoisted(() => ({
+  mockSignInEmail: vi.fn(),
+}));
+
+vi.mock("@/lib/auth-client", () => ({
+  useSession: vi.fn(() => ({ data: null, isPending: false })),
+  signIn: { email: mockSignInEmail },
+}));
+
+import { useSession } from "@/lib/auth-client";
+const mockUseSession = vi.mocked(useSession);
+```
+
+`signIn.email` returns `{ error: null }` on success, `{ error: { message: "..." } }` on failure.
+
 ## Reset
 
 ```ts
