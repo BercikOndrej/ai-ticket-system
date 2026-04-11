@@ -115,6 +115,7 @@ Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch cu
 **Default to unit tests.** Write unit/component tests for the vast majority of cases — form validation, rendering logic, error states, loading states, role-based UI differences, API mock responses. Unit tests are fast, isolated, and cheap to maintain.
 
 **Use E2E tests only when unit tests cannot cover the scenario** — specifically:
+
 - Full authentication flows (real session creation, session persistence, logout)
 - Multi-step CRUD workflows that depend on real API responses changing DB state
 - Cross-cutting concerns that span both client and server (e.g. webhook ingestion + DB state)
@@ -123,7 +124,7 @@ When in doubt, prefer a unit test.
 
 ## Unit / Component Testing (Client)
 
-**Always delegate unit/component test writing to the `unit-test-writer` sub-agent** — never write Vitest tests inline. Only write tests when explicitly asked.
+**Always delegate unit/component test writing to the `unit-test-writer` sub-agent**
 
 Use the Agent tool with `subagent_type: "unit-test-writer"` and include in the prompt: the component or file being tested, its file path, and any relevant context (props, API calls, roles, query keys).
 
@@ -131,7 +132,7 @@ Use the Agent tool with `subagent_type: "unit-test-writer"` and include in the p
 
 ## E2E Testing
 
-**Always delegate E2E test writing to the `e2e-test-writer` sub-agent** — never write Playwright tests inline. Only write tests when explicitly asked.
+**Always delegate E2E test writing to the `e2e-test-writer` sub-agent**
 
 **Only write E2E tests for scenarios that genuinely require a real browser + real backend** (see Testing Strategy above). Do not write E2E tests for form validation, rendering logic, or anything that can be covered by a unit test.
 

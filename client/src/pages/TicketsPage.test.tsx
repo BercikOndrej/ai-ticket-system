@@ -1,4 +1,5 @@
 import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TicketStatus, TicketClassification } from "core/enums";
 import { render } from "@/test/render";
@@ -64,12 +65,12 @@ describe("TicketsPage", () => {
   it("renders all six table column headers", () => {
     mockGet.mockResolvedValue({ data: [] });
     renderPage();
-    expect(screen.getByRole("columnheader", { name: "#" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Subject" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "From" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Status" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Classification" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Received" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /^#/ })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /^Subject/ })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /^From/ })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /^Status/ })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /^Classification/ })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /^Received/ })).toBeInTheDocument();
   });
 
   it("shows skeleton rows while loading", () => {
@@ -154,5 +155,44 @@ describe("TicketsPage", () => {
 
     const expected = new Date("2026-01-10T08:00:00.000Z").toLocaleDateString();
     expect(await screen.findByText(expected)).toBeInTheDocument();
+  });
+
+  it("fetches with default sort params (createdAt desc) on initial load", () => {
+    mockGet.mockResolvedValue({ data: [] });
+    renderPage();
+    expect(mockGet).toHaveBeenCalledWith("/api/tickets", {
+      params: { sortBy: "createdAt", sortOrder: "desc" },
+    });
+  });
+
+  it("re-fetches with sortBy=subject&sortOrder=asc when Subject header is clicked", async () => {
+    const user = userEvent.setup();
+    mockGet.mockResolvedValue({ data: TICKETS });
+    renderPage();
+
+    // Wait for initial data to load, then click the Subject column header.
+    await screen.findByRole("row", { name: /cannot access my course/i });
+    await user.click(screen.getByRole("columnheader", { name: /^Subject/ }));
+
+    expect(mockGet).toHaveBeenCalledWith("/api/tickets", {
+      params: { sortBy: "subject", sortOrder: "asc" },
+    });
+  });
+
+  it("toggles to sortOrder=desc when the same sorted column header is clicked again", async () => {
+    const user = userEvent.setup();
+    mockGet.mockResolvedValue({ data: TICKETS });
+    renderPage();
+
+    await screen.findByRole("row", { name: /cannot access my course/i });
+
+    // First click → asc.
+    await user.click(screen.getByRole("columnheader", { name: /^Subject/ }));
+    // Second click → desc.
+    await user.click(screen.getByRole("columnheader", { name: /^Subject/ }));
+
+    expect(mockGet).toHaveBeenCalledWith("/api/tickets", {
+      params: { sortBy: "subject", sortOrder: "desc" },
+    });
   });
 });

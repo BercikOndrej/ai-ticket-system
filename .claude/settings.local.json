@@ -40,7 +40,9 @@
       "Bash(git -C /c/Users/bercik/Desktop/Work/AI/ticket-system stash list)",
       "Read(//c/Users/bercik/.claude//**)",
       "Read(//c/Users/bercik/.claude/**)",
-      "Bash(npx prettier:*)"
+      "Bash(npx prettier:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npx dotenv-cli:*)"
     ]
   }
 }
