@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Scope & Implementation Plan
+
+- **[project-scope.md](./project-scope.md)** — business context, problem statement, and feature list
+- **[implementation-plan.md](./implementation-plan.md)** — phased build plan with tasks and details
+
+Read both files for full context before working on new features or making architectural decisions.
+
 ## Project Overview
 
 AI-powered ticket management system for an online course business. Customers send support emails, the system creates tickets, classifies them via Claude API, auto-responds using a knowledge base when possible, and escalates to human agents otherwise. Two roles: Admin and Agent.
@@ -89,7 +96,7 @@ Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch cu
 ## Server-Side Validation
 
 - Always use **Zod** to validate request bodies in Express route handlers — never write manual `if`/`else` checks
-- Parse with `schema.safeParse(req.body)`; on failure, return `res.status(400).json({ error: result.error.issues[0].message })`
+- Use the shared `parseBody<T>(schema, body, res)` helper from `server/src/lib/validation.ts` — it calls `safeParse`, sends a `400` on failure, and returns the typed data or `null`; check `if (!data) return;` after calling it
 - Define the Zod schema at module scope, above the route handler
 
 ## API Requests (Client)

@@ -25,6 +25,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "core/schemas/users": ["../core/src/schemas/users.ts"],
+      "core/schemas/tickets": ["../core/src/schemas/tickets.ts"],
       "core/enums": ["../core/src/enums.ts"]
     }
   },

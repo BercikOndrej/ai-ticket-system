@@ -10,6 +10,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
       'core/schemas/users': path.resolve(__dirname, '../core/src/schemas/users.ts'),
+      'core/schemas/tickets': path.resolve(__dirname, '../core/src/schemas/tickets.ts'),
       'core/enums': path.resolve(__dirname, '../core/src/enums.ts'),
     },
     dedupe: ['zod'],

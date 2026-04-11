@@ -1,26 +1,13 @@
 import { Router, Request, Response } from "express";
-import { ZodType } from "zod";
 import { createUserSchema, editUserSchema } from "core/schemas/users";
 import { UserRole } from "core/enums";
 import { requireAuth, requireAdmin } from "../middleware/auth";
 import { prisma } from "../db";
 import { auth } from "../auth";
 import { createUser } from "../lib/users";
+import { parseBody } from "../lib/validation";
 
 const router = Router();
-
-function parseBody<T>(
-  schema: ZodType<T>,
-  body: unknown,
-  res: Response,
-): T | null {
-  const result = schema.safeParse(body);
-  if (!result.success) {
-    res.status(400).json({ error: result.error.issues[0].message });
-    return null;
-  }
-  return result.data;
-}
 
 function handleMutationError(err: any, res: Response) {
   if (err?.code === "P2002") {
