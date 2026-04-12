@@ -29,3 +29,8 @@ export enum TicketSortBy {
   Classification = "classification",
   CreatedAt = "createdAt",
 }
+
+export type TicketSortingState = {
+  sortBy: TicketSortBy;
+  sortOrder: SortOrder;
+};

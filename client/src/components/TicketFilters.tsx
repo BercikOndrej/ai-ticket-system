@@ -15,37 +15,32 @@ const classificationLabels: Record<TicketClassification, string> = {
   [TicketClassification.Refund]: "Refund",
 };
 
+export type TicketFiltersState = {
+  search?: string;
+  status?: TicketStatus;
+  classification?: TicketClassification;
+};
+
 interface TicketFiltersProps {
-  search: string;
-  onSearchChange: (value: string) => void;
-  status: TicketStatus | undefined;
-  onStatusChange: (value: TicketStatus | undefined) => void;
-  classification: TicketClassification | undefined;
-  onClassificationChange: (value: TicketClassification | undefined) => void;
+  filters: TicketFiltersState;
+  onChange: (patch: Partial<TicketFiltersState>) => void;
 }
 
-export default function TicketFilters({
-  search,
-  onSearchChange,
-  status,
-  onStatusChange,
-  classification,
-  onClassificationChange,
-}: TicketFiltersProps) {
+export default function TicketFilters({ filters, onChange }: TicketFiltersProps) {
   return (
     <div className="flex gap-3">
       <Input
         className="w-64"
         placeholder="Search by subject…"
         aria-label="Search by subject"
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
+        value={filters.search ?? ""}
+        onChange={(e) => onChange({ search: e.target.value || undefined })}
       />
 
       <Select
-        value={status ?? "all"}
+        value={filters.status ?? "all"}
         onValueChange={(value) =>
-          onStatusChange(value === "all" ? undefined : (value as TicketStatus))
+          onChange({ status: value === "all" ? undefined : (value as TicketStatus) })
         }
       >
         <SelectTrigger className="w-40" aria-label="Status filter">
@@ -62,9 +57,11 @@ export default function TicketFilters({
       </Select>
 
       <Select
-        value={classification ?? "all"}
+        value={filters.classification ?? "all"}
         onValueChange={(value) =>
-          onClassificationChange(value === "all" ? undefined : (value as TicketClassification))
+          onChange({
+            classification: value === "all" ? undefined : (value as TicketClassification),
+          })
         }
       >
         <SelectTrigger className="w-52" aria-label="Classification filter">

@@ -3,11 +3,17 @@ import {
   getCoreRowModel,
   flexRender,
   createColumnHelper,
-  type SortingState,
+  type PaginationState,
   type OnChangeFn,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import { TicketStatus, TicketClassification, TicketSortBy, SortOrder } from "core/enums";
+import {
+  TicketStatus,
+  TicketClassification,
+  TicketSortBy,
+  SortOrder,
+  type TicketSortingState,
+} from "core/enums";
 import {
   Table,
   TableBody,
@@ -18,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 export type Ticket = {
   id: number;
@@ -33,8 +40,12 @@ interface TicketsTableProps {
   tickets: Ticket[];
   isPending: boolean;
   isError: boolean;
-  sorting: SortingState;
-  onSortingChange: OnChangeFn<SortingState>;
+  sorting: TicketSortingState;
+  onSortingChange: (sorting: TicketSortingState) => void;
+  pagination: PaginationState;
+  onPaginationChange: OnChangeFn<PaginationState>;
+  pageCount: number;
+  total: number;
 }
 
 const classificationLabels: Record<TicketClassification, string> = {
@@ -111,82 +122,127 @@ export default function TicketsTable({
   isError,
   sorting,
   onSortingChange,
+  pagination,
+  onPaginationChange,
+  pageCount,
+  total,
 }: TicketsTableProps) {
+  const tanstackSorting = [{ id: sorting.sortBy, desc: sorting.sortOrder === SortOrder.Desc }];
+
   const table = useReactTable({
     data: tickets,
     columns,
-    state: { sorting },
-    onSortingChange,
+    state: { sorting: tanstackSorting, pagination },
+    onSortingChange: (updater) => {
+      const next = typeof updater === "function" ? updater(tanstackSorting) : updater;
+      onSortingChange({
+        sortBy: next[0].id as TicketSortBy,
+        sortOrder: next[0].desc ? SortOrder.Desc : SortOrder.Asc,
+      });
+    },
+    onPaginationChange,
     manualSorting: true,
+    enableSortingRemoval: false,
+    manualPagination: true,
+    pageCount,
     getCoreRowModel: getCoreRowModel(),
   });
 
   return (
-    <Table>
-      <TableHeader>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id} className="bg-muted/50 hover:bg-muted/50">
-            {headerGroup.headers.map((header) => (
-              <TableHead
-                key={header.id}
-                className={header.column.getCanSort() ? "cursor-pointer select-none" : ""}
-                onClick={header.column.getToggleSortingHandler()}
-              >
-                {flexRender(header.column.columnDef.header, header.getContext())}
-                <SortIcon isSorted={header.column.getIsSorted()} />
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {isPending &&
-          Array.from({ length: 5 }).map((_, i) => (
-            <TableRow key={i}>
-              <TableCell>
-                <Skeleton className="h-4 w-8" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-4 w-48" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-4 w-36" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-5 w-16 rounded-full" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-5 w-28 rounded-full" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-4 w-24" />
-              </TableCell>
+    <>
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id} className="bg-muted/50 hover:bg-muted/50">
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  className={header.column.getCanSort() ? "cursor-pointer select-none" : ""}
+                  onClick={header.column.getToggleSortingHandler()}
+                >
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                  <SortIcon isSorted={header.column.getIsSorted() as false | SortOrder} />
+                </TableHead>
+              ))}
             </TableRow>
           ))}
-        {isError && (
-          <TableRow>
-            <TableCell colSpan={6} className="text-center text-destructive">
-              Failed to load tickets.
-            </TableCell>
-          </TableRow>
-        )}
-        {!isPending && !isError && tickets.length === 0 && (
-          <TableRow>
-            <TableCell colSpan={6} className="text-center text-muted-foreground">
-              No tickets found.
-            </TableCell>
-          </TableRow>
-        )}
-        {table.getRowModel().rows.map((row) => (
-          <TableRow key={row.id}>
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
+        </TableHeader>
+        <TableBody>
+          {isPending &&
+            Array.from({ length: 5 }).map((_, i) => (
+              <TableRow key={i}>
+                <TableCell>
+                  <Skeleton className="h-4 w-8" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-48" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-36" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-28 rounded-full" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-24" />
+                </TableCell>
+              </TableRow>
             ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+          {isError && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-destructive">
+                Failed to load tickets.
+              </TableCell>
+            </TableRow>
+          )}
+          {!isPending && !isError && tickets.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
+                No tickets found.
+              </TableCell>
+            </TableRow>
+          )}
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+        <span>{isPending ? "Loading…" : `${total} ticket${total !== 1 ? "s" : ""} total`}</span>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            aria-label="Previous page"
+          >
+            Previous
+          </Button>
+          <span aria-label="Page info">
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            aria-label="Next page"
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </>
   );
 }

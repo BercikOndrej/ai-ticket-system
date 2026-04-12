@@ -1,35 +1,47 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { type SortingState } from "@tanstack/react-table";
-import { SortOrder, TicketSortBy, TicketStatus, TicketClassification } from "core/enums";
+import { type PaginationState } from "@tanstack/react-table";
+import { TicketSortBy, SortOrder, type TicketSortingState } from "core/enums";
 import apiClient from "@/lib/api-client";
 import TicketsTable, { type Ticket } from "@/components/TicketsTable";
-import TicketFilters from "@/components/TicketFilters";
+import TicketFilters, { type TicketFiltersState } from "@/components/TicketFilters";
 
 export default function TicketsPage() {
-  const [sorting, setSorting] = useState<SortingState>([{ id: TicketSortBy.CreatedAt, desc: true }]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<TicketStatus | undefined>(undefined);
-  const [classificationFilter, setClassificationFilter] = useState<TicketClassification | undefined>(undefined);
+  const [sorting, setSorting] = useState<TicketSortingState>({
+    sortBy: TicketSortBy.CreatedAt,
+    sortOrder: SortOrder.Desc,
+  });
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
+  const [filters, setFilters] = useState<TicketFiltersState>({});
 
-  const sortBy: TicketSortBy = (sorting[0]?.id as TicketSortBy) ?? TicketSortBy.CreatedAt;
-  const sortOrder: SortOrder = sorting[0]?.desc === false ? SortOrder.Asc : SortOrder.Desc;
+  function handleSortingChange(newSorting: TicketSortingState) {
+    setSorting(newSorting);
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }
 
-  const { data: tickets = [], isPending, isError } = useQuery({
-    queryKey: ["tickets", { sortBy, sortOrder, search, statusFilter, classificationFilter }],
+  function handleFiltersChange(patch: Partial<TicketFiltersState>) {
+    setFilters((f) => ({ ...f, ...patch }));
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }
+
+  const { data, isPending, isError } = useQuery({
+    queryKey: ["tickets", { sorting, filters, pagination }],
     queryFn: () =>
       apiClient
-        .get<Ticket[]>("/api/tickets", {
+        .get<{ data: Ticket[]; total: number }>("/api/tickets", {
           params: {
-            sortBy,
-            sortOrder,
-            ...(search && { search }),
-            ...(statusFilter !== undefined && { status: statusFilter }),
-            ...(classificationFilter !== undefined && { classification: classificationFilter }),
+            ...sorting,
+            ...filters,
+            page: pagination.pageIndex + 1,
+            limit: pagination.pageSize,
           },
         })
         .then((res) => res.data),
   });
+
+  const tickets = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / pagination.pageSize));
 
   return (
     <div>
@@ -37,14 +49,7 @@ export default function TicketsPage() {
       <p className="text-muted-foreground mt-1">All support tickets submitted by customers.</p>
 
       <div className="mt-4">
-        <TicketFilters
-          search={search}
-          onSearchChange={setSearch}
-          status={statusFilter}
-          onStatusChange={setStatusFilter}
-          classification={classificationFilter}
-          onClassificationChange={setClassificationFilter}
-        />
+        <TicketFilters filters={filters} onChange={handleFiltersChange} />
       </div>
 
       <div className="mt-4">
@@ -53,7 +58,11 @@ export default function TicketsPage() {
           isPending={isPending}
           isError={isError}
           sorting={sorting}
-          onSortingChange={setSorting}
+          onSortingChange={handleSortingChange}
+          pagination={pagination}
+          onPaginationChange={setPagination}
+          pageCount={pageCount}
+          total={total}
         />
       </div>
     </div>
