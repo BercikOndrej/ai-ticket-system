@@ -165,6 +165,79 @@ describe("TicketsPage", () => {
     });
   });
 
+  it("renders search input and filter dropdowns", () => {
+    mockGet.mockResolvedValue({ data: [] });
+    renderPage();
+    expect(screen.getByRole("textbox", { name: /search by subject/i })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /status filter/i })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /classification filter/i })).toBeInTheDocument();
+  });
+
+  it("re-fetches with search param when text is typed in the search input", async () => {
+    const user = userEvent.setup();
+    mockGet.mockResolvedValue({ data: [] });
+    renderPage();
+
+    await user.type(screen.getByRole("textbox", { name: /search by subject/i }), "refund");
+
+    expect(mockGet).toHaveBeenCalledWith("/api/tickets", {
+      params: { sortBy: "createdAt", sortOrder: "desc", search: "refund" },
+    });
+  });
+
+  it("omits search param when search input is empty", () => {
+    mockGet.mockResolvedValue({ data: [] });
+    renderPage();
+    expect(mockGet).toHaveBeenCalledWith("/api/tickets", {
+      params: { sortBy: "createdAt", sortOrder: "desc" },
+    });
+  });
+
+  it("re-fetches with status param when a status filter is selected", async () => {
+    const user = userEvent.setup();
+    mockGet.mockResolvedValue({ data: [] });
+    renderPage();
+
+    await user.click(screen.getByRole("combobox", { name: /status filter/i }));
+    await user.click(screen.getByRole("option", { name: TicketStatus.Open }));
+
+    expect(mockGet).toHaveBeenCalledWith("/api/tickets", {
+      params: { sortBy: "createdAt", sortOrder: "desc", status: TicketStatus.Open },
+    });
+  });
+
+  it("re-fetches with classification param when a classification filter is selected", async () => {
+    const user = userEvent.setup();
+    mockGet.mockResolvedValue({ data: [] });
+    renderPage();
+
+    await user.click(screen.getByRole("combobox", { name: /classification filter/i }));
+    await user.click(await screen.findByRole("option", { name: /technical question/i }));
+
+    expect(mockGet).toHaveBeenCalledWith("/api/tickets", {
+      params: {
+        sortBy: "createdAt",
+        sortOrder: "desc",
+        classification: TicketClassification.TechnicalQuestion,
+      },
+    });
+  });
+
+  it("omits filter params from request when filters are reset to 'all'", async () => {
+    const user = userEvent.setup();
+    mockGet.mockResolvedValue({ data: [] });
+    renderPage();
+
+    // Select a status then reset it back to "all".
+    await user.click(screen.getByRole("combobox", { name: /status filter/i }));
+    await user.click(await screen.findByRole("option", { name: TicketStatus.Resolved }));
+    await user.click(screen.getByRole("combobox", { name: /status filter/i }));
+    await user.click(await screen.findByRole("option", { name: /all statuses/i }));
+
+    const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1];
+    expect(lastCall[1]).toEqual({ params: { sortBy: "createdAt", sortOrder: "desc" } });
+  });
+
   it("re-fetches with sortBy=subject&sortOrder=asc when Subject header is clicked", async () => {
     const user = userEvent.setup();
     mockGet.mockResolvedValue({ data: TICKETS });
