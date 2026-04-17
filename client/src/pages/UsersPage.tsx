@@ -14,7 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import UsersTable, { type User } from "@/components/UsersTable";
+import UsersTable from "@/components/UsersTable";
+import { type User } from "@/types/user";
 import UserDialog from "@/components/UserDialog";
 
 export default function UsersPage() {

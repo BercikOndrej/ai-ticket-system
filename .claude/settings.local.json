@@ -42,7 +42,9 @@
       "Read(//c/Users/bercik/.claude/**)",
       "Bash(npx prettier:*)",
       "Bash(npx tsx:*)",
-      "Bash(npx dotenv-cli:*)"
+      "Bash(npx dotenv-cli:*)",
+      "Bash(grep -n \"TicketStatus\\\\|TicketClassification\" core/src/enums.ts)",
+      "Bash(cat core/src/enums.ts)"
     ]
   }
 }

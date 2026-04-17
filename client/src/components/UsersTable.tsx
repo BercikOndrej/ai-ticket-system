@@ -1,5 +1,6 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { UserRole } from "core/enums";
+import { type User } from "@/types/user";
 import {
   Table,
   TableBody,
@@ -11,14 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  createdAt: string;
-};
+import ErrorAlert from "@/components/ErrorAlert";
 
 interface UsersTableProps {
   users: User[];
@@ -30,7 +24,14 @@ interface UsersTableProps {
 
 export default function UsersTable({ users, isPending, isError, onEdit, onDelete }: UsersTableProps) {
   return (
-    <Table>
+    <>
+      {isError && (
+        <ErrorAlert
+          title="Failed to load users"
+          message="An error occurred while loading users. Please try again."
+        />
+      )}
+      <Table>
       <TableHeader>
         <TableRow className="bg-muted/50 hover:bg-muted/50">
           <TableHead>Name</TableHead>
@@ -59,13 +60,6 @@ export default function UsersTable({ users, isPending, isError, onEdit, onDelete
               <TableCell />
             </TableRow>
           ))}
-        {isError && (
-          <TableRow>
-            <TableCell colSpan={5} className="text-center text-destructive">
-              Failed to load users.
-            </TableCell>
-          </TableRow>
-        )}
         {!isPending && !isError && users.length === 0 && (
           <TableRow>
             <TableCell colSpan={5} className="text-center text-muted-foreground">
@@ -105,5 +99,6 @@ export default function UsersTable({ users, isPending, isError, onEdit, onDelete
         ))}
       </TableBody>
     </Table>
+    </>
   );
 }

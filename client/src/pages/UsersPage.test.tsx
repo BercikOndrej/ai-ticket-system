@@ -1,5 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { UserRole } from "core/enums";
 import { render } from "@/test/render";
 import UsersPage from "./UsersPage";
@@ -31,7 +32,11 @@ const USERS = [
 ];
 
 function renderPage() {
-  return render(<UsersPage />);
+  return render(
+    <MemoryRouter>
+      <UsersPage />
+    </MemoryRouter>,
+  );
 }
 
 beforeEach(() => {
@@ -95,7 +100,7 @@ describe("UsersPage", () => {
     mockGet.mockRejectedValue(new Error("Network error"));
     renderPage();
     expect(
-      await screen.findByText("Failed to load users."),
+      await screen.findByText("Failed to load users"),
     ).toBeInTheDocument();
   });
 

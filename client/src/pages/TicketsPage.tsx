@@ -3,8 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { type PaginationState } from "@tanstack/react-table";
 import { TicketSortBy, SortOrder, type TicketSortingState } from "core/enums";
 import apiClient from "@/lib/api-client";
-import TicketsTable, { type Ticket } from "@/components/TicketsTable";
-import TicketFilters, { type TicketFiltersState } from "@/components/TicketFilters";
+import TicketsTable from "@/components/TicketsTable";
+import { type Ticket } from "@/types/ticket";
+import TicketFilters from "@/components/TicketFilters";
+import { type TicketFiltersState } from "@/types/ticket";
 
 export default function TicketsPage() {
   const [sorting, setSorting] = useState<TicketSortingState>({

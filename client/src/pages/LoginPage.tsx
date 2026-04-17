@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import ErrorAlert from "@/components/ErrorAlert";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -72,8 +73,8 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           {serverError && (
-            <div className="bg-destructive/10 text-destructive px-3 py-2 rounded-md text-sm mb-4">
-              {serverError}
+            <div className="mb-4">
+              <ErrorAlert title="Sign-in failed" message={serverError} />
             </div>
           )}
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">

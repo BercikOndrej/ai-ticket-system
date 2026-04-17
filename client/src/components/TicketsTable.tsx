@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   useReactTable,
   getCoreRowModel,
@@ -7,13 +8,8 @@ import {
   type OnChangeFn,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import {
-  TicketStatus,
-  TicketClassification,
-  TicketSortBy,
-  SortOrder,
-  type TicketSortingState,
-} from "core/enums";
+import { TicketSortBy, SortOrder, type TicketSortingState } from "core/enums";
+import { type Ticket } from "@/types/ticket";
 import {
   Table,
   TableBody,
@@ -23,18 +19,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { classificationLabels, statusVariant } from "@/lib/ticket-helpers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-
-export type Ticket = {
-  id: number;
-  subject: string;
-  fromName: string;
-  fromEmail: string;
-  status: TicketStatus;
-  classification: TicketClassification | null;
-  createdAt: string;
-};
+import ErrorAlert from "@/components/ErrorAlert";
 
 interface TicketsTableProps {
   tickets: Ticket[];
@@ -48,18 +36,6 @@ interface TicketsTableProps {
   total: number;
 }
 
-const classificationLabels: Record<TicketClassification, string> = {
-  [TicketClassification.GeneralQuestion]: "General question",
-  [TicketClassification.TechnicalQuestion]: "Technical question",
-  [TicketClassification.Request]: "Request",
-  [TicketClassification.Refund]: "Refund",
-};
-
-const statusVariant: Record<TicketStatus, "default" | "secondary" | "outline"> = {
-  [TicketStatus.Open]: "default",
-  [TicketStatus.Resolved]: "secondary",
-  [TicketStatus.Closed]: "outline",
-};
 
 const columnHelper = createColumnHelper<Ticket>();
 
@@ -72,7 +48,14 @@ const columns = [
   columnHelper.accessor((row) => row.subject, {
     id: TicketSortBy.Subject,
     header: "Subject",
-    cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+    cell: (info) => (
+      <Link
+        to={`/tickets/${info.row.original.id}`}
+        className="font-medium hover:underline"
+      >
+        {info.getValue()}
+      </Link>
+    ),
   }),
   columnHelper.accessor((row) => row.fromName, {
     id: TicketSortBy.FromName,
@@ -150,6 +133,12 @@ export default function TicketsTable({
 
   return (
     <>
+      {isError && (
+        <ErrorAlert
+          title="Failed to load tickets"
+          message="An error occurred while loading tickets. Please try again."
+        />
+      )}
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -191,13 +180,6 @@ export default function TicketsTable({
                 </TableCell>
               </TableRow>
             ))}
-          {isError && (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center text-destructive">
-                Failed to load tickets.
-              </TableCell>
-            </TableRow>
-          )}
           {!isPending && !isError && tickets.length === 0 && (
             <TableRow>
               <TableCell colSpan={6} className="text-center text-muted-foreground">

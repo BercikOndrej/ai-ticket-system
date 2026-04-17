@@ -1,6 +1,7 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { TicketStatus, TicketClassification } from "core/enums";
 import { render } from "@/test/render";
 import TicketsPage from "./TicketsPage";
@@ -45,7 +46,11 @@ const TICKETS = [
 ];
 
 function renderPage() {
-  return render(<TicketsPage />);
+  return render(
+    <MemoryRouter>
+      <TicketsPage />
+    </MemoryRouter>,
+  );
 }
 
 beforeEach(() => {
@@ -106,7 +111,7 @@ describe("TicketsPage", () => {
   it("shows error message when the request fails", async () => {
     mockGet.mockRejectedValue(new Error("Network error"));
     renderPage();
-    expect(await screen.findByText("Failed to load tickets.")).toBeInTheDocument();
+    expect(await screen.findByText("Failed to load tickets")).toBeInTheDocument();
   });
 
   it("renders the status badge with the correct label", async () => {

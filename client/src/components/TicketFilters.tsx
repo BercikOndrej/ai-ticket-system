@@ -1,4 +1,6 @@
 import { TicketStatus, TicketClassification } from "core/enums";
+import { classificationLabels } from "@/lib/ticket-helpers";
+import { type TicketFiltersState } from "@/types/ticket";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -7,19 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const classificationLabels: Record<TicketClassification, string> = {
-  [TicketClassification.GeneralQuestion]: "General question",
-  [TicketClassification.TechnicalQuestion]: "Technical question",
-  [TicketClassification.Request]: "Request",
-  [TicketClassification.Refund]: "Refund",
-};
-
-export type TicketFiltersState = {
-  search?: string;
-  status?: TicketStatus;
-  classification?: TicketClassification;
-};
 
 interface TicketFiltersProps {
   filters: TicketFiltersState;

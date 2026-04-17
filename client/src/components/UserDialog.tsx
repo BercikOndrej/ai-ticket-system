@@ -17,7 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { User } from "@/components/UsersTable";
+import type { User } from "@/types/user";
+import ErrorAlert from "@/components/ErrorAlert";
 
 interface UserDialogProps {
   open: boolean;
@@ -85,11 +86,7 @@ export default function UserDialog({ open, onOpenChange, user }: UserDialogProps
           autoComplete="off"
         >
           <div className="space-y-4 py-2">
-            {serverError && (
-              <div className="bg-destructive/10 text-destructive px-3 py-2 rounded-md text-sm">
-                {serverError}
-              </div>
-            )}
+            {serverError && <ErrorAlert message={serverError} />}
 
             <div className="space-y-1.5">
               <Label htmlFor="user-form-name">Name</Label>
