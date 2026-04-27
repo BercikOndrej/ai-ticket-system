@@ -17,6 +17,19 @@ function handleMutationError(err: any, res: Response) {
   res.status(500).json({ error: "Internal server error" });
 }
 
+router.get("/assignable-agents", requireAuth, async (_req, res) => {
+  const users = await prisma.user.findMany({
+    where: {
+      deletedAt: null,
+      role: UserRole.Agent,
+    },
+    select: { id: true, name: true, email: true },
+    orderBy: { name: "asc" },
+  });
+
+  res.json(users);
+});
+
 router.get("/", requireAuth, requireAdmin, async (_req, res) => {
   const users = await prisma.user.findMany({
     where: { deletedAt: null },

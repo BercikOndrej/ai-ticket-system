@@ -1,3 +1,8 @@
+import * as dotenv from "dotenv";
+import * as path from "path";
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
 import { prisma } from "../src/db";
 import { UserRole, TicketStatus, TicketClassification } from "core/enums";
 import { createUser } from "../src/lib/users";
