@@ -1,21 +1,29 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { TicketStatus, TicketClassification } from "core/enums";
 import { render } from "@/test/render";
+import { classificationLabels } from "@/lib/ticket-helpers";
 import TicketDetailPage from "./TicketDetailPage";
 
-// Mock apiClient so tests never hit the network.
 vi.mock("@/lib/api-client", () => ({
-  default: { get: vi.fn() },
+  default: { get: vi.fn(), patch: vi.fn() },
+}));
+
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
 }));
 
 import apiClient from "@/lib/api-client";
+import { toast } from "sonner";
 
 const mockGet = vi.mocked(apiClient.get);
+const mockPatch = vi.mocked(apiClient.patch);
 
+// Full TicketDetail shape including new assignedToAgent field.
 const BASE_TICKET = {
-  id: 1,
+  id: 42,
   subject: "Cannot access my course",
   fromName: "Alice Smith",
   fromEmail: "alice@example.com",
@@ -25,10 +33,31 @@ const BASE_TICKET = {
   updatedAt: "2026-01-11T09:00:00.000Z",
   body: "Hello, I cannot access my course after purchase.",
   bodyHtml: "<p>Hello, I cannot access my course after purchase.</p>",
-  assignedToAgentId: "agent-abc-123",
+  assignedToAgentId: null,
+  assignedToAgent: null,
 };
 
-function renderPage(id = "1") {
+const TEST_AGENT = {
+  id: "agent-abc-123",
+  name: "Bob Agent",
+  email: "bob@example.com",
+};
+
+/**
+ * mockGet implementation for dual-endpoint setup:
+ * - /api/users/assignable-agents → agents list (or empty)
+ * - everything else → ticket data
+ */
+function setupGetMocks(ticket = BASE_TICKET, agents: typeof TEST_AGENT[] = []) {
+  mockGet.mockImplementation((url: string) => {
+    if (url.includes("assignable-agents")) {
+      return Promise.resolve({ data: agents });
+    }
+    return Promise.resolve({ data: ticket });
+  });
+}
+
+function renderPage(id = "42") {
   return render(
     <MemoryRouter initialEntries={[`/tickets/${id}`]}>
       <Routes>
@@ -44,8 +73,8 @@ beforeEach(() => {
 
 describe("TicketDetailPage", () => {
   describe("Loading state", () => {
-    it("renders skeleton elements while the query is pending", () => {
-      // Never resolves — keeps isPending true.
+    it("renders skeleton elements while ticket query is pending", () => {
+      // Neither promise ever resolves — keeps both queries in isPending state.
       mockGet.mockReturnValue(new Promise(() => {}));
       renderPage();
       const skeletons = document.querySelectorAll("[class*='animate-pulse']");
@@ -54,22 +83,22 @@ describe("TicketDetailPage", () => {
   });
 
   describe("Error state", () => {
-    it("renders ErrorAlert with title 'Failed to load ticket' when the query fails", async () => {
+    it("renders ErrorAlert with title 'Failed to load ticket' when ticket query rejects", async () => {
       mockGet.mockRejectedValue(new Error("Network error"));
       renderPage();
       expect(await screen.findByText("Failed to load ticket")).toBeInTheDocument();
     });
 
-    it("renders the error description message", async () => {
+    it("renders the error description when ticket query fails", async () => {
       mockGet.mockRejectedValue(new Error("Network error"));
       renderPage();
       expect(await screen.findByText(/could not be loaded/i)).toBeInTheDocument();
     });
   });
 
-  describe("Success state — full ticket with bodyHtml", () => {
+  describe("Success state — ticket content", () => {
     beforeEach(() => {
-      mockGet.mockResolvedValue({ data: BASE_TICKET });
+      setupGetMocks();
     });
 
     it("renders the ticket subject in an h1", async () => {
@@ -79,55 +108,41 @@ describe("TicketDetailPage", () => {
       ).toBeInTheDocument();
     });
 
-    it("renders the sender name and email", async () => {
+    it("renders the sender name", async () => {
       renderPage();
       expect(await screen.findByText("Alice Smith")).toBeInTheDocument();
+    });
+
+    it("renders the sender email", async () => {
+      renderPage();
+      await screen.findByRole("heading", { level: 1 });
       expect(screen.getByText(/alice@example\.com/)).toBeInTheDocument();
     });
 
-    it("renders the status badge", async () => {
-      renderPage();
-      expect(await screen.findByText(TicketStatus.Open)).toBeInTheDocument();
-    });
-
-    it("renders the classification badge with human-readable label", async () => {
-      renderPage();
-      expect(await screen.findByText("Technical question")).toBeInTheDocument();
-    });
-
-    it("renders the assigned agent ID", async () => {
-      renderPage();
-      expect(await screen.findByText("agent-abc-123")).toBeInTheDocument();
-    });
-
-    it("renders the received date formatted via toLocaleString", async () => {
+    it("renders the received date via toLocaleString", async () => {
       renderPage();
       const expected = new Date("2026-01-10T08:00:00.000Z").toLocaleString();
       expect(await screen.findByText(expected)).toBeInTheDocument();
     });
 
-    it("renders the message body via dangerouslySetInnerHTML when bodyHtml is present", async () => {
+    it("renders message body via dangerouslySetInnerHTML when bodyHtml is present", async () => {
       renderPage();
-      // Wait for data to load.
       await screen.findByRole("heading", { level: 1 });
-      // The prose div container should be in the document.
       const proseDiv = document.querySelector(".prose");
       expect(proseDiv).toBeInTheDocument();
       expect(proseDiv?.innerHTML).toContain("Hello, I cannot access my course after purchase.");
     });
 
-    it("does not render a <pre> element when bodyHtml is present", async () => {
+    it("does not render a pre element when bodyHtml is present", async () => {
       renderPage();
       await screen.findByRole("heading", { level: 1 });
       expect(document.querySelector("pre")).not.toBeInTheDocument();
     });
   });
 
-  describe("Success state — ticket with null bodyHtml", () => {
-    it("renders body text in a <pre> element when bodyHtml is null", async () => {
-      mockGet.mockResolvedValue({
-        data: { ...BASE_TICKET, bodyHtml: null },
-      });
+  describe("Success state — plain text body", () => {
+    it("renders body text in a pre element when bodyHtml is null", async () => {
+      setupGetMocks({ ...BASE_TICKET, bodyHtml: null });
       renderPage();
       await screen.findByRole("heading", { level: 1 });
       const pre = document.querySelector("pre");
@@ -136,40 +151,61 @@ describe("TicketDetailPage", () => {
     });
 
     it("does not render the prose div when bodyHtml is null", async () => {
-      mockGet.mockResolvedValue({
-        data: { ...BASE_TICKET, bodyHtml: null },
-      });
+      setupGetMocks({ ...BASE_TICKET, bodyHtml: null });
       renderPage();
       await screen.findByRole("heading", { level: 1 });
       expect(document.querySelector(".prose")).not.toBeInTheDocument();
     });
   });
 
-  describe("Success state — null classification", () => {
-    it("shows '—' instead of a badge when classification is null", async () => {
-      mockGet.mockResolvedValue({
-        data: { ...BASE_TICKET, classification: null },
-      });
+  describe("Success state — sidebar selects", () => {
+    it("status select shows current status value", async () => {
+      setupGetMocks({ ...BASE_TICKET, status: TicketStatus.Open });
       renderPage();
-      expect(await screen.findByText("—")).toBeInTheDocument();
+      await screen.findByRole("heading", { level: 1 });
+      const statusTrigger = screen.getByRole("combobox", { name: /ticket status/i });
+      expect(statusTrigger).toHaveTextContent(TicketStatus.Open);
     });
-  });
 
-  describe("Success state — null assignedToAgentId", () => {
-    it("shows 'Unassigned' when assignedToAgentId is null", async () => {
-      mockGet.mockResolvedValue({
-        data: { ...BASE_TICKET, assignedToAgentId: null },
-      });
+    it("category select shows human-readable classification label", async () => {
+      setupGetMocks({ ...BASE_TICKET, classification: TicketClassification.TechnicalQuestion });
       renderPage();
-      expect(await screen.findByText("Unassigned")).toBeInTheDocument();
+      await screen.findByRole("heading", { level: 1 });
+      const categoryTrigger = screen.getByRole("combobox", { name: /ticket category/i });
+      expect(categoryTrigger).toHaveTextContent(
+        classificationLabels[TicketClassification.TechnicalQuestion],
+      );
+    });
+
+    it("assign ticket select shows 'Unassigned' when assignedToAgent is null", async () => {
+      setupGetMocks({ ...BASE_TICKET, assignedToAgent: null, assignedToAgentId: null });
+      renderPage();
+      await screen.findByRole("heading", { level: 1 });
+      const assignTrigger = screen.getByRole("combobox", { name: /assign ticket/i });
+      expect(assignTrigger).toHaveTextContent(/unassigned/i);
+    });
+
+    it("assign ticket select shows agent name when assignedToAgent is set", async () => {
+      setupGetMocks(
+        {
+          ...BASE_TICKET,
+          assignedToAgentId: TEST_AGENT.id,
+          assignedToAgent: TEST_AGENT,
+        },
+        [TEST_AGENT],
+      );
+      renderPage();
+      await screen.findByRole("heading", { level: 1 });
+      const assignTrigger = screen.getByRole("combobox", { name: /assign ticket/i });
+      expect(assignTrigger).toHaveTextContent(TEST_AGENT.name);
     });
   });
 
   describe("Back link", () => {
-    it("renders a link back to /tickets", async () => {
-      mockGet.mockResolvedValue({ data: BASE_TICKET });
+    it("renders a link back to /tickets", () => {
+      // Back link is always rendered regardless of load state.
+      mockGet.mockReturnValue(new Promise(() => {}));
       renderPage();
-      // The back link is always rendered — it doesn't depend on load state.
       const link = screen.getByRole("link", { name: /back to tickets/i });
       expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute("href", "/tickets");
@@ -177,11 +213,52 @@ describe("TicketDetailPage", () => {
   });
 
   describe("API call", () => {
-    it("fetches the ticket by id from the correct endpoint", async () => {
-      mockGet.mockResolvedValue({ data: BASE_TICKET });
+    it("fetches the ticket from the correct endpoint using the route id", async () => {
+      setupGetMocks();
       renderPage("42");
       await screen.findByRole("heading", { level: 1 });
       expect(mockGet).toHaveBeenCalledWith("/api/tickets/42");
+    });
+  });
+
+  describe("Mutation — status change", () => {
+    it("calls apiClient.patch with the new status when select value changes", async () => {
+      setupGetMocks({ ...BASE_TICKET, status: TicketStatus.Open });
+      mockPatch.mockResolvedValue({ data: { ...BASE_TICKET, status: TicketStatus.Resolved } });
+
+      const user = userEvent.setup();
+      renderPage("42");
+      await screen.findByRole("heading", { level: 1 });
+
+      // Open the status combobox and pick "Resolved".
+      const statusTrigger = screen.getByRole("combobox", { name: /ticket status/i });
+      await user.click(statusTrigger);
+
+      const resolvedOption = await screen.findByRole("option", { name: TicketStatus.Resolved });
+      await user.click(resolvedOption);
+
+      await waitFor(() => {
+        expect(mockPatch).toHaveBeenCalledWith("/api/tickets/42", { status: TicketStatus.Resolved });
+      });
+    });
+
+    it("calls toast.success after a successful status patch", async () => {
+      setupGetMocks({ ...BASE_TICKET, status: TicketStatus.Open });
+      mockPatch.mockResolvedValue({ data: { ...BASE_TICKET, status: TicketStatus.Resolved } });
+
+      const user = userEvent.setup();
+      renderPage("42");
+      await screen.findByRole("heading", { level: 1 });
+
+      const statusTrigger = screen.getByRole("combobox", { name: /ticket status/i });
+      await user.click(statusTrigger);
+
+      const resolvedOption = await screen.findByRole("option", { name: TicketStatus.Resolved });
+      await user.click(resolvedOption);
+
+      await waitFor(() => {
+        expect(vi.mocked(toast.success)).toHaveBeenCalledWith("Ticket status updated.");
+      });
     });
   });
 });

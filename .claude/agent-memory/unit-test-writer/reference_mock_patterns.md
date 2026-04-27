@@ -113,6 +113,55 @@ const mockUseSession = vi.mocked(useSession);
 
 `signIn.email` returns `{ error: null }` on success, `{ error: { message: "..." } }` on failure.
 
+## Mocking sonner toast
+
+`<Toaster />` is only in `main.tsx`, not in the test render wrapper — sonner toasts are invisible in jsdom. Mock the module and assert on the spy instead of querying the DOM.
+
+```ts
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
+
+import { toast } from "sonner";
+
+// In test:
+await waitFor(() => {
+  expect(vi.mocked(toast.success)).toHaveBeenCalledWith("Expected message.");
+});
+```
+
+## Dual-endpoint GET mock (multiple resources)
+
+When a component calls `apiClient.get` for two different URLs, use `mockImplementation` to route by URL:
+
+```ts
+mockGet.mockImplementation((url: string) => {
+  if (url.includes("assignable-agents")) {
+    return Promise.resolve({ data: [] });
+  }
+  return Promise.resolve({ data: ticket });
+});
+```
+
+## Mocking apiClient.patch alongside get
+
+```ts
+vi.mock("@/lib/api-client", () => ({
+  default: { get: vi.fn(), patch: vi.fn() },
+}));
+
+import apiClient from "@/lib/api-client";
+const mockPatch = vi.mocked(apiClient.patch);
+
+// Happy path:
+mockPatch.mockResolvedValue({ data: updatedResource });
+
+// Verify call:
+await waitFor(() => {
+  expect(mockPatch).toHaveBeenCalledWith("/api/resource/42", { field: value });
+});
+```
+
 ## Reset
 
 ```ts
