@@ -27,35 +27,24 @@
  * all tickets created during that test are deleted via Prisma so the DB stays
  * clean across runs.
  *
- * The "Closed ticket" deduplication test closes a ticket directly via Prisma
- * (instantiated inline using the test DATABASE_URL) because no REST PATCH
- * endpoint for tickets exists yet.
+ * The "Closed ticket" deduplication test closes a ticket directly via SQL
+ * to avoid importing the Prisma client (ESM + driver-adapter complexity).
  */
 
 import { test, expect } from "@playwright/test";
-import * as dotenv from "dotenv";
-import * as fs from "fs";
-import path from "path";
 import { Pool } from "pg";
 import { TicketStatus } from "../../core/src/enums";
+import { TEST_ENV } from "../test-env";
 
-// ---------------------------------------------------------------------------
-// Load test env vars so WEBHOOK_SECRET and DATABASE_URL are available.
-// ---------------------------------------------------------------------------
-const envTestPath = path.resolve(__dirname, "../../server/.env.test");
-if (fs.existsSync(envTestPath)) {
-  dotenv.config({ path: envTestPath });
-}
-
-const SERVER_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3001";
+const SERVER_URL = TEST_ENV.BETTER_AUTH_URL ?? "http://localhost:3001";
 const WEBHOOK_URL = `${SERVER_URL}/api/webhooks/inbound-email`;
-const CORRECT_SECRET = process.env.WEBHOOK_SECRET ?? "test-webhook-secret";
+const CORRECT_SECRET = TEST_ENV.WEBHOOK_SECRET ?? "test-webhook-secret";
 
 // ---------------------------------------------------------------------------
 // pg Pool for teardown helpers (avoids ESM + driver-adapter complexity of
 // the Prisma 7 generated client, which cannot be require()'d directly).
 // ---------------------------------------------------------------------------
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ connectionString: TEST_ENV.DATABASE_URL });
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -387,7 +376,7 @@ test.describe("POST /api/webhooks/inbound-email", () => {
       expect(first.status()).toBe(201);
       const firstBody = await first.json();
 
-      // Step 2: close the ticket directly via Prisma (no REST PATCH endpoint exists yet)
+      // Step 2: close the ticket directly via SQL
       await closeTicketViaDb(firstBody.id);
 
       // Step 3: send the same email again — the Closed ticket must be ignored,

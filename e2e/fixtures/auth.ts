@@ -1,13 +1,5 @@
 import { Page, expect } from "@playwright/test";
-import * as dotenv from "dotenv";
-import * as fs from "fs";
-import * as path from "path";
-
-// Load test env vars so seeded credentials are available.
-const envTestPath = path.resolve(__dirname, "../../server/.env.test");
-if (fs.existsSync(envTestPath)) {
-  dotenv.config({ path: envTestPath });
-}
+import { TEST_ENV } from "../test-env";
 
 /**
  * Test credentials based on seeded data from server/prisma/seed.ts.
@@ -15,13 +7,13 @@ if (fs.existsSync(envTestPath)) {
  */
 export const TEST_USERS = {
   admin: {
-    email: process.env.SEED_ADMIN_EMAIL ?? "admin@test.local",
-    password: process.env.SEED_ADMIN_PASSWORD ?? "change-me-before-use",
+    email: TEST_ENV.SEED_ADMIN_EMAIL ?? "admin@test.local",
+    password: TEST_ENV.SEED_ADMIN_PASSWORD ?? "change-me-before-use",
     name: "Admin",
   },
   agent: {
-    email: process.env.SEED_AGENT_EMAIL ?? "agent@test.local",
-    password: process.env.SEED_AGENT_PASSWORD ?? "change-me-before-use",
+    email: TEST_ENV.SEED_AGENT_EMAIL ?? "agent@test.local",
+    password: TEST_ENV.SEED_AGENT_PASSWORD ?? "change-me-before-use",
     name: "Agent",
   },
 } as const;
