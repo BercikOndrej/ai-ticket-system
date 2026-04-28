@@ -22,3 +22,9 @@ export const ticketUpdateSchema = z
   });
 
 export type TicketUpdateInput = z.infer<typeof ticketUpdateSchema>;
+
+export const ticketReplyCreateSchema = z.object({
+  body: z.string().min(1, "Reply is required").max(10000).trim(),
+});
+
+export type TicketReplyCreateInput = z.infer<typeof ticketReplyCreateSchema>;

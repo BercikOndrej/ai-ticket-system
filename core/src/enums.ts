@@ -1,3 +1,8 @@
+export enum SenderType {
+  Agent = "Agent",
+  Customer = "Customer",
+}
+
 export enum UserRole {
   Admin = "Admin",
   Agent = "Agent",

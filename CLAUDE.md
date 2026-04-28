@@ -58,6 +58,10 @@ npx prisma migrate dev     # Create and apply migrations
 npx prisma studio          # Open database GUI
 ```
 
+## Code Quality
+
+- Always use curly braces `{}` around `if` statement bodies — never single-line braceless `if`
+
 ## Documentation
 
 Always use the Context7 MCP (`resolve-library-id` then `query-docs`) to fetch current documentation before writing or modifying code that uses any library, framework, or API. Do not rely on training data alone — docs may have changed.

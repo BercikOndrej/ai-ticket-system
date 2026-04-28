@@ -8,11 +8,15 @@ import { classificationLabels } from "@/lib/ticket-helpers";
 import TicketDetailPage from "./TicketDetailPage";
 
 vi.mock("@/lib/api-client", () => ({
-  default: { get: vi.fn(), patch: vi.fn() },
+  default: { get: vi.fn(), patch: vi.fn(), post: vi.fn() },
 }));
 
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
+}));
+
+vi.mock("@/lib/auth-client", () => ({
+  useSession: vi.fn().mockReturnValue({ data: { user: { name: "Test Agent" } } }),
 }));
 
 import apiClient from "@/lib/api-client";
@@ -35,6 +39,7 @@ const BASE_TICKET = {
   bodyHtml: "<p>Hello, I cannot access my course after purchase.</p>",
   assignedToAgentId: null,
   assignedToAgent: null,
+  replies: [],
 };
 
 const TEST_AGENT = {

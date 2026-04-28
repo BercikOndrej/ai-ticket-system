@@ -1,7 +1,7 @@
 import { Router, type Response } from "express";
 import { z } from "zod";
-import { SortOrder, TicketSortBy, TicketStatus, TicketClassification, UserRole } from "core/enums";
-import { ticketUpdateSchema } from "core/schemas/tickets";
+import { SortOrder, TicketSortBy, TicketStatus, TicketClassification, UserRole, SenderType } from "core/enums";
+import { ticketUpdateSchema, ticketReplyCreateSchema } from "core/schemas/tickets";
 import { requireAuth } from "../middleware/auth";
 import { prisma } from "../db";
 import { Prisma } from "../generated/prisma/client";
@@ -37,6 +37,23 @@ const ticketDetailSelect = {
       deletedAt: true,
     },
   },
+  replies: {
+    select: {
+      id: true,
+      body: true,
+      authorId: true,
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      senderType: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: "asc" as const },
+  },
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.TicketSelect;
@@ -65,6 +82,17 @@ function serializeTicketDetail(ticket: TicketDetailRecord) {
         }
       : null;
 
+  const replies = ticket.replies.map((reply) => ({
+    id: reply.id,
+    body: reply.body,
+    authorId: reply.authorId,
+    author: reply.author
+      ? { id: reply.author.id, name: reply.author.name, email: reply.author.email }
+      : null,
+    senderType: reply.senderType,
+    createdAt: reply.createdAt,
+  }));
+
   return {
     id: ticket.id,
     subject: ticket.subject,
@@ -76,6 +104,7 @@ function serializeTicketDetail(ticket: TicketDetailRecord) {
     classification: ticket.classification ?? TicketClassification.GeneralQuestion,
     assignedToAgentId: assignedToAgent?.id ?? null,
     assignedToAgent,
+    replies,
     createdAt: ticket.createdAt,
     updatedAt: ticket.updatedAt,
   };
@@ -188,6 +217,44 @@ router.patch("/:id", requireAuth, async (req, res) => {
   });
 
   res.json(serializeTicketDetail(updatedTicket));
+});
+
+router.post("/:id/replies", requireAuth, async (req, res) => {
+  const id = parseTicketId(req.params.id, res);
+  if (id === null) {
+    return;
+  }
+
+  const data = parseBody(ticketReplyCreateSchema, req.body, res);
+  if (!data) {
+    return;
+  }
+
+  const existingTicket = await prisma.ticket.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+
+  if (!existingTicket) {
+    res.status(404).json({ error: "Ticket not found" });
+    return;
+  }
+
+  await prisma.ticketReply.create({
+    data: {
+      body: data.body,
+      ticketId: id,
+      authorId: req.authSession!.user.id,
+      senderType: SenderType.Agent,
+    },
+  });
+
+  const updatedTicket = await prisma.ticket.findUnique({
+    where: { id },
+    select: ticketDetailSelect,
+  });
+
+  res.json(serializeTicketDetail(updatedTicket!));
 });
 
 export default router;

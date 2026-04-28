@@ -7,6 +7,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum SenderType {
+  Agent
+  Customer
+}
+
 enum UserRole {
   Admin
   Agent
@@ -36,10 +41,24 @@ model Ticket {
   classification     TicketClassification?
   assignedToAgentId  String?
   assignedToAgent    User?                 @relation(fields: [assignedToAgentId], references: [id])
+  replies            TicketReply[]
   createdAt          DateTime              @default(now())
   updatedAt          DateTime              @updatedAt
 
   @@map("ticket")
+}
+
+model TicketReply {
+  id         Int        @id @default(autoincrement())
+  body       String
+  ticketId   Int
+  ticket     Ticket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId   String?
+  author     User?      @relation(fields: [authorId], references: [id])
+  senderType SenderType
+  createdAt  DateTime   @default(now())
+
+  @@map("ticket_reply")
 }
 
 model User {
@@ -55,6 +74,7 @@ model User {
   sessions        Session[]
   accounts        Account[]
   assignedTickets Ticket[]
+  ticketReplies   TicketReply[]
 
   @@map("user")
 }
