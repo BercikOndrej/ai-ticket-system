@@ -255,7 +255,7 @@ router.post("/:id/replies", requireAuth, async (req, res) => {
     select: ticketDetailSelect,
   });
 
-  res.json(serializeTicketDetail(updatedTicket!));
+  res.status(201).json(serializeTicketDetail(updatedTicket!));
 });
 
 export default router;
