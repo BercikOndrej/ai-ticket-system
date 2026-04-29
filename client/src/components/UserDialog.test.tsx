@@ -1,7 +1,7 @@
 import { screen, waitFor, render as rtlRender } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import axios from "axios";
+import axios, { type AxiosError } from "axios";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { UserRole } from "core/enums";
 import { render } from "@/test/render";
@@ -48,7 +48,7 @@ const MOCK_USER = {
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
-function buildAxiosError(status: number): axios.AxiosError {
+function buildAxiosError(status: number): AxiosError {
   const err = new axios.AxiosError("Request failed");
   err.response = {
     status,

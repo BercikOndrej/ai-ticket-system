@@ -14,7 +14,9 @@
     "paths": {
       "core/schemas/users": ["../core/src/schemas/users.ts"],
       "core/schemas/tickets": ["../core/src/schemas/tickets.ts"],
-      "core/enums": ["../core/src/enums.ts"]
+      "core/enums": ["../core/src/enums.ts"],
+      "core/types/user": ["../core/src/types/user.ts"],
+      "core/types/ticket": ["../core/src/types/ticket.ts"]
     }
   },
   "include": ["src"],

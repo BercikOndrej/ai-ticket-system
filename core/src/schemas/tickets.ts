@@ -1,5 +1,5 @@
-import { TicketClassification, TicketStatus } from "core/enums";
 import { z } from "zod";
+import { TicketClassification, TicketStatus } from "../enums";
 
 export const inboundEmailSchema = z.object({
   subject: z.string().min(1, "Subject is required"),
@@ -13,8 +13,8 @@ export type InboundEmailInput = z.infer<typeof inboundEmailSchema>;
 
 export const ticketUpdateSchema = z
   .object({
-    status: z.nativeEnum(TicketStatus).optional(),
-    classification: z.nativeEnum(TicketClassification).optional(),
+    status: z.enum(TicketStatus).optional(),
+    classification: z.enum(TicketClassification).optional(),
     assignedToAgentId: z.string().trim().min(1, "Assigned agent ID is required").nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { TicketStatus, TicketClassification } from "core/enums";
+import { type TicketDetail } from "@/types/ticket";
 import { render } from "@/test/render";
 import { classificationLabels } from "@/lib/ticket-helpers";
 import TicketDetailPage from "./TicketDetailPage";
@@ -53,7 +54,7 @@ const TEST_AGENT = {
  * - /api/users/assignable-agents → agents list (or empty)
  * - everything else → ticket data
  */
-function setupGetMocks(ticket = BASE_TICKET, agents: typeof TEST_AGENT[] = []) {
+function setupGetMocks(ticket: TicketDetail = BASE_TICKET, agents: typeof TEST_AGENT[] = []) {
   mockGet.mockImplementation((url: string) => {
     if (url.includes("assignable-agents")) {
       return Promise.resolve({ data: agents });

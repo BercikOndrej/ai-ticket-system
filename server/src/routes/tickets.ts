@@ -2,6 +2,7 @@ import { Router, type Response } from "express";
 import { z } from "zod";
 import { SortOrder, TicketSortBy, TicketStatus, TicketClassification, UserRole, SenderType } from "core/enums";
 import { ticketUpdateSchema, ticketReplyCreateSchema } from "core/schemas/tickets";
+import type { TicketDetail } from "core/types/ticket";
 import { requireAuth } from "../middleware/auth";
 import { prisma } from "../db";
 import { Prisma } from "../generated/prisma/client";
@@ -10,10 +11,10 @@ import { parseBody } from "../lib/validation";
 const router = Router();
 
 const querySchema = z.object({
-  sortBy: z.nativeEnum(TicketSortBy).optional().default(TicketSortBy.CreatedAt),
-  sortOrder: z.nativeEnum(SortOrder).optional().default(SortOrder.Desc),
-  status: z.nativeEnum(TicketStatus).optional(),
-  classification: z.nativeEnum(TicketClassification).optional(),
+  sortBy: z.enum(TicketSortBy).optional().default(TicketSortBy.CreatedAt),
+  sortOrder: z.enum(SortOrder).optional().default(SortOrder.Desc),
+  status: z.enum(TicketStatus).optional(),
+  classification: z.enum(TicketClassification).optional(),
   search: z.string().optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(10),
@@ -62,9 +63,9 @@ type TicketDetailRecord = Prisma.TicketGetPayload<{ select: typeof ticketDetailS
 
 function parseTicketId(idParam: string | string[] | undefined, res: Response) {
   const normalizedIdParam = Array.isArray(idParam) ? idParam[0] : idParam;
-  const id = parseInt(normalizedIdParam ?? "", 10);
+  const id = Number.parseInt(normalizedIdParam ?? "", 10);
 
-  if (isNaN(id)) {
+  if (Number.isNaN(id)) {
     res.status(400).json({ error: "Invalid ticket ID" });
     return null;
   }
@@ -72,9 +73,9 @@ function parseTicketId(idParam: string | string[] | undefined, res: Response) {
   return id;
 }
 
-function serializeTicketDetail(ticket: TicketDetailRecord) {
+function serializeTicketDetail(ticket: TicketDetailRecord): TicketDetail {
   const assignedToAgent =
-    ticket.assignedToAgent && ticket.assignedToAgent.deletedAt === null
+    ticket.assignedToAgent?.deletedAt === null
       ? {
           id: ticket.assignedToAgent.id,
           name: ticket.assignedToAgent.name,
@@ -90,7 +91,7 @@ function serializeTicketDetail(ticket: TicketDetailRecord) {
       ? { id: reply.author.id, name: reply.author.name, email: reply.author.email }
       : null,
     senderType: reply.senderType,
-    createdAt: reply.createdAt,
+    createdAt: reply.createdAt.toISOString(),
   }));
 
   return {
@@ -105,8 +106,8 @@ function serializeTicketDetail(ticket: TicketDetailRecord) {
     assignedToAgentId: assignedToAgent?.id ?? null,
     assignedToAgent,
     replies,
-    createdAt: ticket.createdAt,
-    updatedAt: ticket.updatedAt,
+    createdAt: ticket.createdAt.toISOString(),
+    updatedAt: ticket.updatedAt.toISOString(),
   };
 }
 

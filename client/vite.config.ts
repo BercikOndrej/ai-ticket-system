@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import path from "node:path"
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,6 +12,8 @@ export default defineConfig({
       'core/schemas/users': path.resolve(__dirname, '../core/src/schemas/users.ts'),
       'core/schemas/tickets': path.resolve(__dirname, '../core/src/schemas/tickets.ts'),
       'core/enums': path.resolve(__dirname, '../core/src/enums.ts'),
+      'core/types/user': path.resolve(__dirname, '../core/src/types/user.ts'),
+      'core/types/ticket': path.resolve(__dirname, '../core/src/types/ticket.ts'),
     },
     dedupe: ['zod'],
   },
