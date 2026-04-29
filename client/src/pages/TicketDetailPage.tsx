@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -67,7 +68,7 @@ export default function TicketDetailPage() {
                   {ticket.bodyHtml ? (
                     <div
                       className="prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: ticket.bodyHtml }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(ticket.bodyHtml) }}
                     />
                   ) : (
                     <pre className="whitespace-pre-wrap text-sm">{ticket.body}</pre>
